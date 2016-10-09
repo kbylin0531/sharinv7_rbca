@@ -1,0 +1,41 @@
+<?php
+
+/**
+* Created by PhpStorm.
+* User: asus
+* Date: 16-10-9
+* Time: 下午1:06
+*/
+namespace Sharin\Test;
+use Sharin\Component;
+
+/**
+ * Class ComponentTest
+ *
+ * @method dump() static
+ *
+ * @package Sharin\Test
+ */
+class ComponentTest extends Component {
+
+    public static function __initialization(array $config = null){
+        parent::__initialization([
+            'BASE_ON_DRIVER'        => true,
+            'BASED_DRIVER_INDEX'    => '0',
+
+            'DRIVER_CLASS_LIST'     => [
+                CDriver1::class,
+                CDriver2::class,
+            ],      //驱动类的列表
+            'DRIVER_CONFIG_LIST'    => [
+                [
+                    1
+                ],[
+                    2
+                ]
+            ],      //驱动类列表参数
+        ]);
+        \Sharin\dump(self::convention());
+    }
+
+}

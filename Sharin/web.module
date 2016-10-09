@@ -7,6 +7,7 @@ use Sharin\Developer;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Exceptions\RouteParseFailedException;
 use Sharin\SharinException as SE;
+use Sharin\Behaviours\StaticCacheBehaviour as SCB;
 //获取开始运行时状态
 $GLOBALS['web_begin'] = [
     $_SERVER['REQUEST_TIME_FLOAT'],
@@ -29,6 +30,9 @@ if(SR_DEBUG_MODE_ON) {
     //开发者模式
     error_reporting(-1);
     ini_set('display_errors', 1);
+
+    Developer::import('web_begin',$GLOBALS['web_begin']);
+
     require __DIR__.'/Common/debug_suit.inc';
     require __DIR__.'/Common/environment.inc';
 }else{
@@ -56,6 +60,22 @@ final class Sharin {
         'SESSION_MEMCACHE_ON'   => false,
         'SESSION_MEMCACHE_IP'   => '127.0.0.1',
         'SESSION_MEMCACHE_PORT' => '11211',
+
+        'BEHAVIOURS'        => [
+            ON_INIT    => [],
+            ON_INITED  => [],
+            ON_START   => [
+                SCB::class,
+            ],
+            ON_ROUTE    => [],
+            ON_CHECK    => [],
+            ON_DISPATCH => [
+                SCB::class,
+            ],
+            ON_STOP     => [
+                SCB::class,
+            ],
+        ],
     ];
 
     private static $_prev_error_handler = null;
@@ -68,6 +88,7 @@ final class Sharin {
      * @throws ParameterInvalidException
      */
     public static function init(array $config=NONE_CONFIG){
+        Behaviour::register(self::$convention['BEHAVIOURS']);
         Behaviour::listen(ON_INIT);
         $config and self::$convention = array_merge(self::$convention,$config);
 

@@ -6,7 +6,6 @@ use Throwable;
 use Exception;
 use Sharin\Core\Trace;
 use Sharin\Behaviours\StaticCacheBehaviour;
-use Sharin\Core\Configger;
 use Sharin\Exceptions\MethodNotFoundException;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Library\Response;
@@ -182,27 +181,30 @@ final class Utils {
 
     /**
      * 将参数二的配置合并到参数一种，如果存在参数一数组不存在的配置项，跳过其设置
-     * @param array $dest dest config
-     * @param array $sourse sourse config whose will overide the $dest config
-     * @param bool|false $cover it will merge the target in recursion while $cover is true
-     *                  (will perfrom a high efficiency for using the built-in function)
+     * (不会覆盖)
+     * @param array $dest 被覆盖者
+     * @param array $sourse 覆盖者
+     * @param bool $covermode 为true的情况下无论目标健是否存在否会覆盖，否则会先检测目标是否存在
      * @return mixed
      */
-    public static function merge(array $dest,array $sourse,$cover=false){
+    public static function merge(array $dest, array $sourse,bool $covermode=false){
         foreach($sourse as $key=>$val){
-            $exists = key_exists($key,$dest);
-            if($cover){
-                //覆盖模式
-                if($exists and is_array($dest[$key])){
-                    //键存在 为数组
-                    $dest[$key] = self::merge($dest[$key],$val,true);
+            if($covermode){
+                //fugei mose
+                if (isset($dest[$key]) and is_array($val)) {
+                    $dest[$key] = self::merge($dest[$key],$val,true);/* se shuju,zo erbi tyi */
                 }else{
-                    //key not exist or not array 直接覆盖
                     $dest[$key] = $val;
                 }
             }else{
-                //非覆盖模式
-                $exists and $dest[$key] = $val;
+                //kno saiqu wumao sai
+                if(isset($dest[$key])){
+                    if (is_array($val)) {
+                        $dest[$key] = self::merge($dest[$key],$val,false);
+                    }else{
+                        $dest[$key] = $val;
+                    }
+                }
             }
         }
         return $dest;
@@ -246,10 +248,6 @@ final class Utils {
     }
 }
 
-function iiiiiiiiiiiiiiiiiiii(){
-    if(SR_DEBUG_MODE_ON) Developer::import('web_begin',$GLOBALS['web_begin']);
-}
-
 /**
  * Class Behaviour
  * 行为控制,各个行为点的结合代表着应用的生命周期
@@ -263,36 +261,30 @@ final class Behaviour {
      * 如果是value类名称，则key可能是其调用的方法的名称（此时会检查这个类中是否存在这个方法），也可能是一个标识符
      * @var array
      */
-    private static $tags = [
-        ON_INIT    => [
-            'iiiiiiiiiiiiiiiiiiii'
-        ],
-        ON_INITED  => [],
-        ON_START   => [
-            StaticCacheBehaviour::class,
-        ],
-        ON_ROUTE    => [],
-        ON_CHECK    => [],
-        ON_DISPATCH => [
-            StaticCacheBehaviour::class,
-        ],
-        ON_STOP     => [
-            StaticCacheBehaviour::class,
-        ],
-    ];
+    private static $tags = [];
+
+    public static function init(array $tags=null){
+        if(null !== $tags){
+            self::$tags = $tags;
+        }
+    }
 
     /**
      * 动态注册行为
-     * @param string $tag 标签名称
+     * @param string|array $tag 标签名称，如果是数组则意味着批量导入
      * @param mixed|array $behavior 行为名称,为array类型时将进行批量注册
      * @return void
      */
-    public static function register($tag, $behavior) {
-        if (!isset(self::$tags[$tag]))  self::$tags[$tag] = [];
-        if (is_array($behavior)) {
-            self::$tags[$tag] = array_merge(self::$tags[$tag], $behavior);
-        } else {
-            self::$tags[$tag][] = $behavior;
+    public static function register($tag, $behavior=null) {
+        if(is_array($tag)){
+            self::$tags = array_merge(self::$tags,$tag);
+        }else{
+            if (!isset(self::$tags[$tag]))  self::$tags[$tag] = [];
+            if (is_array($behavior)) {
+                self::$tags[$tag] = array_merge(self::$tags[$tag], $behavior);
+            } else {
+                self::$tags[$tag][] = $behavior;
+            }
         }
     }
 
@@ -612,144 +604,7 @@ class SharinException extends Exception {
     }
 
 }
-/**
- * Trait C
- * manage the configuration of this class
- *
- * @synthesize array $config static
- *
- * @package Sharin
- */
-trait C {
 
-    /**
-     * 类的静态配置
-     * @var array
-     */
-    private static $_cs = [];
-
-    /**
-     * initialize the class with config
-     * :eg the name of this method is much special to make class initialize automaticlly
-     * @return void
-     */
-    public static function __initializationize(){
-        $clsnm = static::class;
-        if(!isset(self::$_cs[$clsnm])){
-            //get convention
-            self::$_cs[$clsnm] = Utils::constant($clsnm,'CONF_CONVENTION',[]);
-
-            //load the outer config
-            $conf = Configger::load($clsnm);
-            $conf and self::$_cs[$clsnm] = Utils::merge(self::$_cs[$clsnm],$conf,true);
-        }
-        //auto init
-        Utils::callStatic($clsnm,'__init');
-    }
-
-    /**
-     * 获取该类的配置（经过用户自定义后）
-     * @param string|null $name 配置项名称
-     * @param mixed $replacement 找不到对应配置时的默认配置
-     * @return array
-     */
-    final protected static function getConfig($name=null,$replacement=null){
-        $clsnm = static::class;
-        isset(self::$_cs[$clsnm]) or self::$_cs[$clsnm] = [];
-        return isset($name) ? (isset(self::$_cs[$clsnm][$name])?self::$_cs[$clsnm][$name]:$replacement) : (isset(self::$_cs[$clsnm])?self::$_cs[$clsnm]:$replacement);
-    }
-
-    /**
-     * 设置运行时配置
-     * @todo:
-     * @static
-     * @param string $name
-     * @param mixed $value
-     * @return void
-     */
-    final protected static function setConfig($name,$value){}
-
-}
-
-/**
- * Trait I
- * manage the instantiation of this class
- * @package Sharin
- */
-trait I {
-
-    /**
-     * @var array 驱动列表
-     */
-    private static $_is = [];
-
-    /**
-     * 更具驱动名称和参数获取驱动实例
-     * Get instance of this class of special driver by config
-     * @param array|int|float|string|null $config it will convered to identify
-     * @param string $clsnm class name ,it will always be driver name if value set to re-null
-     * @param string|int $identify Instance identify
-     * @return object
-     * @throws ParameterInvalidException
-     */
-    public static function getInstance($config=null,$clsnm=USE_DEFAULT,$identify=null){
-        $clsnm === null and $clsnm = static::class;
-        if(null === $identify){
-            switch (gettype($config)){
-                case TYPE_ARRAY:
-                    $identify = Utils::dataSign($config);
-                    break;
-                case TYPE_FLOAT:
-                case TYPE_INT:
-                case TYPE_STR:
-                    $identify = (string) $config;
-                    break;
-                case TYPE_NULL:
-                    $identify = 0;
-                    break;
-                default:
-                    throw new ParameterInvalidException($config);
-            }
-        }
-
-        if(!isset(self::$_is[$clsnm][$identify])){
-            self::$_is[$clsnm][$identify] = (null !== $config ? new $clsnm($config) :new $clsnm());
-        }
-        return self::$_is[$clsnm][$identify];
-    }
-
-    /**
-     * 判断是否存在实例
-     * @param array|int|float|string|null $config it will convered to identify
-     * @param string $clsnm class name ,it will always be driver name if value set to re-null
-     * @return bool
-     * @throws ParameterInvalidException
-     */
-    public static function hasInstance($config=null,$clsnm=USE_DEFAULT){
-        isset($clsnm) or $clsnm = static::class;
-        if(!isset(self::$_is[$clsnm])){
-            self::$_is[$clsnm] = [];
-            return false;
-        }
-        //get identify
-        switch (gettype($config)){
-            case TYPE_ARRAY:
-                $identify = Utils::dataSign($config);
-                break;
-            case TYPE_FLOAT:
-            case TYPE_INT:
-            case TYPE_STR:
-                $identify = (string) $config;
-                break;
-            case TYPE_NULL:
-                $identify = 0;
-                break;
-            default:
-                throw new ParameterInvalidException($config);
-        }
-        return isset(self::$_is[$clsnm][$identify]);
-    }
-}
 
 /**
  * Class Component 组件类
@@ -775,52 +630,69 @@ abstract class Component {
      * @var object[] 静态驱动列表
      */
     private static $_static_drivers = [];
+
     /**
      * @var object[] 驱动列表
      */
     private static $_drivers = [];
     /**
+     * @var string 组件名称（是该组件的唯一标识符），为空时表示自动获取，否则取该类的静态name属性作为短名称
+     */
+    protected static $name = null;
+
+    /**
+     * @var string 错误信息，只能内部设置
+     */
+    protected static $_error = '';
+    /**
+     * 获取组件名称
+     * 组件名称是类名称的变体，将"\\"改为"."，并且全部转为小写
+     * @return string
+     */
+    public static function getName(){
+        null === static::$name and static::$name = strtolower(str_replace('\\','.',ltrim(static::class,'\\')));
+        return static::$name;
+    }
+
+    /**
+     * 获取错误信息
+     * 获取一次后错误信息将被重置
+     * @return string
+     */
+    public static function getError(){
+        $error = static::$_error;
+        static::$_error = '';
+        return $error;
+    }
+    /**
      * 类自动加载时自动调用
+     * [OK]
      * @param array|null $config 参数非空是留给继承类覆盖时调用的
      * @return void
      */
     public static function __initialization(array $config = null){
         static $_convention = [ /* jito wule tigo xinen */
-            'BASE_ON_DRIVER'        => FALSE,   //静态方法是否基于驱动
-            'BASED_DRIVER_INDEX'    => '',      //静态方法基于的驱动角标
+            BASE_ON_DRIVER        => FALSE,   //静态方法是否基于驱动
+            BASED_DRIVER_INDEX    => '',      //静态方法基于的驱动角标
 
-            'DRIVER_CLASS_LIST'     => [],      //驱动类的列表
-            'DRIVER_CONFIG_LIST'    => [],      //驱动类列表参数
+            DRIVER_CLASS_LIST     => [],      //驱动类的列表
+            DRIVER_CONFIG_LIST    => [],      //驱动类列表参数
         ];
-        if(null !== $config){
-            $config= Utils::merge($_convention,$config,false);
-        }else{
-            $config = $_convention;
-        }
-
-        self::$_conventions[static::class]  = $config;
+        self::$_conventions[static::class] = null !== $config? Utils::merge($_convention,$config,true) : $_convention;
     }
 
     /**
      * 获取静态驱动
-     * @param bool $throw 不存在驱动时是否直接抛出异常
      * @return object|false 返回驱动，驱动不存在时返回false
-     * @throws ComponentMissDriverException 缺少驱动列表时抛出异常
      */
-    protected static function getStaticDriver($throw=false){
+    final public static function getStaticDriver(){
         $static = static::class;
         if(!isset(self::$_static_drivers[$static])){
-            if(false === self::convention('BASE_ON_INSTANCE',false)){
-                if($throw){
-                    throw new ComponentMissDriverException($static,'Not open');
-                }else{
-                    return false;
-                }
+            $instance = self::instance(self::convention('BASED_DRIVER_INDEX',-1));/* -1 kennia mao gei*/
+            if(false === $instance){
+                return false;
             }
-            if(false === ($clsnm = self::convention('BASED_INSTANCE_DRIVER_NAME',false))){
-                throw new ComponentMissDriverException($static,'Driver not found');
-            }
-            self::$_static_drivers[$static] = new $clsnm(self::convention('BASED_INSTANCE_DRIVER_PARAMS',null));
+            self::$_static_drivers[$static] = $instance;
         }
         return self::$_static_drivers[$static];
     }
@@ -831,7 +703,7 @@ abstract class Component {
      * @param mixed $alternate 替补，如果目标配置不存在
      * @return mixed
      */
-    public static function convention(string $name='',mixed $alternate=null){
+    final public static function convention(string $name='',$alternate=null){
         $clsnm = static::class;
         isset(self::$_conventions[$clsnm]) or self::$_conventions[$clsnm] = [];
         if(empty($name)){
@@ -858,143 +730,27 @@ abstract class Component {
      * @param int|string|null $index 角标，如果是null时表示自动获取
      * @return object|false
      */
-    public static function instance($index=null){
+    final public static function instance($index=null){
         $static = static::class;
         isset(self::$_drivers[$static]) or self::$_drivers[$static] = [];
         if(!isset(self::$_drivers[$static][$index])){
+            $classes = self::convention('DRIVER_CLASS_LIST',[]);
             if(null === $index){
-                /* mao ge hua,hofe "reset" o hofei false */
-                $clsnm = reset(self::convention('DRIVER_CLASS_LIST',[]));
-                if(false === $clsnm) return false;
-                $params = reset(self::convention('DRIVER_CONFIG_LIST',[]));
-                self::$_drivers[$static][$index] = $params ? new $clsnm($params) : new $clsnm();
+                $clsnm = reset($classes);
+                if(false === $clsnm) {
+                    return false;
+                }
+            } else {
+                if(!isset($classes[$index])){
+                    return false;
+                }
+                $clsnm = $classes[$index];
             }
+            $plist = self::convention('DRIVER_CONFIG_LIST',[]);
+            $params = isset($plist[$index])? $plist[$index] : reset($plist);
+            self::$_drivers[$static][$index] = $params ? new $clsnm($params) : new $clsnm();
         }
         return self::$_drivers[$static][$index];
-    }
-
-}
-
-
-/**
- * Class Core
- *
- * @property array $config
- *  'sample class' => [
- *      'DRIVER_DEFAULT_INDEX' => 0,//默认驱动ID，类型限定为int或者string
- *      'DRIVER_CLASS_LIST' => [],//驱动类的列表
- *      'DRIVER_CONFIG_LIST' => [],//驱动类列表参数
- *  ]
- *
- * @package Sharin
- */
-abstract class Core {
-
-    use C,I;
-
-    /**
-     * 类实例的驱动
-     * @var object
-     */
-    private static $_drivers = [
-        /************************************
-        'sample class' => Object
-         ************************************/
-    ];
-    /**
-     * @var array 当前类使用的默认驱动的角标
-     */
-    protected static $_current_using = [];
-
-    /**
-     * @param int|string $index 指派当前默认的角标以覆盖静态配置文件中固定的设置
-     */
-    public static function using($index){
-        self::$_current_using[static::class] = $index;
-    }
-
-    /**
-     * 获取Driver-based Instance
-     * @param mixed $identify
-     * @return object
-     */
-    public static function instance(mixed $identify=USE_DEFAULT){
-        if($identify === USE_DEFAULT and isset(self::$_current_using[static::class])){
-            $identify = self::$_current_using[static::class];
-        }
-        $instance = self::getInstance(null,null,$identify);
-        $instance->setDriver(self::driver($identify));
-        return $instance;
-    }
-
-    /**
-     * it maybe a waste of performance
-     * @param mixed $identify it will get the default index if set to null
-     * @return object
-     * @throws SharinException
-     */
-    public static function driver(mixed $identify=USE_DEFAULT){
-        $clsnm = static::class;
-        isset(self::$_drivers[$clsnm]) or self::$_drivers[$clsnm] = [];
-        $config = null;
-
-        //get default identify
-        if(USE_DEFAULT === $identify) {
-            $config = static::getConfig();
-            if(isset($config[DRIVER_DEFAULT_INDEX])){
-                $identify = $config[DRIVER_DEFAULT_INDEX];
-            }else{
-//                throw new SharinException("找不到类'{$clsnm}'关于'{$identify}'的驱动！");
-                return USE_DEFAULT;
-            }
-        }
-
-        //instance a driver for this identify
-        if(!isset(self::$_drivers[$clsnm][$identify])){
-            $config or $config = static::getConfig();
-            if(isset($config[DRIVER_CLASS_LIST][$identify])){
-                $driver_conf = isset($config[DRIVER_CONFIG_LIST][$identify])?$config[DRIVER_CONFIG_LIST][$identify]:null;
-                $driver_class = $config[DRIVER_CLASS_LIST][$identify];
-                self::$_drivers[$clsnm][$identify] = self::getInstance($driver_conf,$driver_class,$identify);
-            }else{
-                throw new SharinException("无法创建类'{$clsnm}'关于'{$identify}'的驱动！");
-            }
-        }
-        return self::$_drivers[$clsnm][$identify];
-    }
-//------------------------------------------------- 实例驱动 ----------------------------------------------------------//
-    /**
-     * @var object 实例的驱动实例，一实例一驱动
-     */
-    protected $_driver = null;
-
-    /**
-     * @return object
-     */
-    public function getDriver(){
-        return $this->_driver;
-    }
-    /**
-     * @param object $driver
-     */
-    public function setDriver(object $driver){
-        $this->_driver = $driver;
-    }
-//------------------------------------------------- 魔术方法 ----------------------------------------------------------//
-    /**
-     * Use driver method as its instance method
-     * @param string $method method name
-     * @param array $arguments method arguments
-     * @return mixed
-     * @throws SharinException
-     */
-    public function __call(string $method,array $arguments) {
-        $clsnm = static::class;
-        if(!isset($this->_driver)){
-            throw new SharinException($clsnm);
-        }
-        if(!method_exists($this->_driver,$method)) throw new MethodNotFoundException($clsnm,$method);
-        return call_user_func_array([$this->_driver, $method], $arguments);
     }
 
     /**
@@ -1005,15 +761,12 @@ abstract class Core {
      * @throws SharinException
      */
     public static function __callStatic(string $method,array $arguments) {
-        $driver = static::driver();
-        $clsnm = static::class;
-        if(USE_DEFAULT === $driver){
-            $callable = "{$clsnm}::_{$method}";
-        }else{
-            $callable = [$driver, $method];
-        }
-
-        if(!is_callable($callable)) throw new MethodNotFoundException($clsnm,$method);
+        $driver = static::instance(null);
+        if(false === $driver) throw new ComponentMissDriverException(static::class);
+        $callable = [$driver, $method];
+        if(!is_callable($callable)) throw new MethodNotFoundException(static::class,$method);
         return call_user_func_array($callable, $arguments);
     }
+
 }
+

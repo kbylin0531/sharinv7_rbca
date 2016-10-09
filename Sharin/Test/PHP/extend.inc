@@ -5,16 +5,37 @@
  * Date: 16-10-9
  * Time: 上午10:34
  */
-class A {
+namespace hellophp {
+
+    class A {
 
 
+        public static $name = null;
 
-}
 
-class B extends A{
+        public static function getName(){
+            if(null === static::$name){
+                static::$name = strtolower(str_replace('\\','.',trim(static::class,'\\')));
+            }
+            return static::$name;
+        }
 
-}
+    }
 
-class C extends A{
+    class B extends A{
 
+        public static $name = 'bbbb';
+
+    }
+
+    class C extends A{
+
+    }
+
+
+    var_dump([
+        A::getName(),
+        B::getName(),
+        C::getName(),
+    ]);
 }

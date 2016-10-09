@@ -7,118 +7,45 @@
  * Time: 10:42 AM
  */
 namespace Sharin\Core;
-use Sharin\Core;
+use Sharin\Component;
 use Sharin\Exceptions\IO\ReadAccessDenyException;
 use Sharin\Exceptions\IO\WriteAccessDenyException;
 use Sharin\SharinException;
 use Sharin\Utils;
 
 /**
- * Class Storage
- * @method mixed read(string $filepath, string $file_encoding = null, bool $recursion = false) static 获取文件内容
- * @method array readDir(string $dirpath,bool $recursion=false) static 获取文件夹下的内容
- * @method int has(string $filepath) static 确定文件或者目录是否存在
- * @method int|bool mtime(string $filepath, int $mtime = null) static 返回文件内容上次的修改时间
- * @method int|false size(string $filepath) static 获取文件按大小
- * @method bool mkdir(string $dirpath,int $auth = 0766) static 创建文件夹
- * @method bool touch(string $filepath,int  $mtime = null,int  $atime = null) static 设定文件的访问和修改时间
- * @method bool chmod(string $filepath,int  $auth = 0755) static 修改文件权限
- * @method bool unlink(string $filepath,bool $recursion = false) static 删除文件,目录时必须保证该目录为空
- * @method bool write(string $filepath,string $content,string $write_encode = null,string $text_encode = 'UTF-8') static 将指定内容写入到文件中
- * @method bool append(string $filepath,string  $content,string $write_encode = null,string $text_encode = 'UTF-8') static 将指定内容追加到文件中
+ * Class Storage 持久化类
  * @package Sharin
  */
-class Storage extends Core {
-
-    const CONF_NAME = 'storage';
-    const CONF_CONVENTION = [
-        'READ_LIMIT_ON'     => true,
-        'WRITE_LIMIT_ON'    => true,
-        'READABLE_SCOPE'    => SR_PATH_BASE,
-        'WRITABLE_SCOPE'    => [
-            SR_PATH_RUNTIME,
-            SR_PATH_BASE.'/Public/dynamic/'
-        ],
-    ];
+class Storage extends Component {
 
     /**
      * 目录存在与否
      */
-    const IS_DIR    = -1;
+    const IS_EMPTY  = 0;//is empty or access deny
     const IS_FILE   = 1;
-    const IS_EMPTY  = 0;
+    const IS_DIR    = 2;
+
+    protected static $name = 'storage';
 
     /**
      * @var array
      */
     private static $_config = [];
 
-    public static function __init(){
-        self::$_config = self::getConfig();
+    public static function __initialization(array $config = null){
+        parent::__initialization([
+            'READ_LIMIT_ON'     => true,
+            'WRITE_LIMIT_ON'    => true,
+            'READABLE_SCOPE'    => SR_PATH_BASE,
+            'WRITABLE_SCOPE'    => [
+                SR_PATH_RUNTIME,
+                SR_PATH_BASE.'/Public/rt/',//'rt' means 'runtime'
+            ],
+        ]);
+        self::$_config = self::convention();
     }
 //-------------------------------- 特征方法，仅适用于文件系统的驱动 ----------------------------------------------------------------------//
-    /**
-     * 获取文件权限，以linux的格式显示
-     * @static
-     * @param string $file
-     * @return string|false
-     */
-    public static function permission($file){
-        if(is_readable($file)){
-            $perms = fileperms($file);
-            if (($perms & 0xC000) == 0xC000) {
-                // Socket
-                $info = 's';
-            } elseif (($perms & 0xA000) == 0xA000) {
-                // Symbolic Link
-                $info = 'l';
-            } elseif (($perms & 0x8000) == 0x8000) {
-                // Regular
-                $info = '-';
-            } elseif (($perms & 0x6000) == 0x6000) {
-                // Block special
-                $info = 'b';
-            } elseif (($perms & 0x4000) == 0x4000) {
-                // Directory
-                $info = 'd';
-            } elseif (($perms & 0x2000) == 0x2000) {
-                // Character special
-                $info = 'c';
-            } elseif (($perms & 0x1000) == 0x1000) {
-                // FIFO pipe
-                $info = 'p';
-            } else {
-                // Unknown
-                $info = 'u';
-            }
-
-            // Owner
-            $info .= (($perms & 0x0100) ? 'r' : '-');
-            $info .= (($perms & 0x0080) ? 'w' : '-');
-            $info .= (($perms & 0x0040) ?
-                (($perms & 0x0800) ? 's' : 'x' ) :
-                (($perms & 0x0800) ? 'S' : '-'));
-
-            // Group
-            $info .= (($perms & 0x0020) ? 'r' : '-');
-            $info .= (($perms & 0x0010) ? 'w' : '-');
-            $info .= (($perms & 0x0008) ?
-                (($perms & 0x0400) ? 's' : 'x' ) :
-                (($perms & 0x0400) ? 'S' : '-'));
-
-            // Other
-            $info .= (($perms & 0x0004) ? 'r' : '-');
-            $info .= (($perms & 0x0002) ? 'w' : '-');
-            $info .= (($perms & 0x0001) ?
-                (($perms & 0x0200) ? 't' : 'x' ) :
-                (($perms & 0x0200) ? 'T' : '-'));
-            return $info;
-        }else{
-            return false;
-        }
-    }
-
-
     /**
      * 文件大小格式化
      * @param int $precision
@@ -132,7 +59,7 @@ class Storage extends Core {
                 'TB' => 1099511627776,  // pow( 1024, 4)
                 'GB' => 1073741824,		// pow( 1024, 3)
                 'MB' => 1048576,		// pow( 1024, 2)
-                'kB' => 1024,			// pow( 1024, 1)
+                'KB' => 1024,			// pow( 1024, 1)
                 'B ' => 1,				// pow( 1024, 0)
             ];
             foreach ($unit as $un => $mag) {
@@ -140,12 +67,11 @@ class Storage extends Core {
                     return round($bytes / $mag, $precision).' '.$un;
             }
         }
-        return "0 B";
+        return '0 B';
     }
 
     /**
-     * 参数一是否是文件
-     * @static
+     * 获取文件权限描述字符串
      * @param $file
      * @param bool $isfile
      * @return string
@@ -233,11 +159,6 @@ class Storage extends Core {
         return $result;
     }
 
-
-
-
-
-
 //--------------------------------------------------- 内置 ---------------------------------------------------------------//
     /**
      * 检查目标目录是否可读取 并且对目标字符串进行修正处理
@@ -255,7 +176,6 @@ class Storage extends Core {
         $temp = dirname($path);//修改的目录
         $path = Utils::toSystemEncode($path);
         is_string($scopes) and $scopes = [$scopes];
-//        \Sharin\dumpout($temp,$scopes);
         foreach ($scopes as $scope){
             if(Utils::checkInScope($temp,$scope)){
                 return true;
@@ -271,10 +191,7 @@ class Storage extends Core {
      * @throws ReadAccessDenyException
      */
     private static function checkReadableWithRevise(&$path){
-        if(false === self::checkAccessableWithRevise($path,self::$_config['READ_LIMIT_ON'],self::$_config['READABLE_SCOPE'])){
-            throw new ReadAccessDenyException($path,self::$_config['READ_LIMIT_ON'],self::$_config['READABLE_SCOPE']);
-        }
-        return true;
+        return self::checkAccessableWithRevise($path,self::$_config['READ_LIMIT_ON'],self::$_config['READABLE_SCOPE']);
     }
 
     /**
@@ -284,10 +201,7 @@ class Storage extends Core {
      * @throws WriteAccessDenyException
      */
     private static function checkWritableWithRevise(&$path){
-        if(false === self::checkAccessableWithRevise($path,self::$_config['WRITE_LIMIT_ON'],self::$_config['WRITABLE_SCOPE'])){
-            throw new WriteAccessDenyException($path,self::$_config['WRITE_LIMIT_ON'],self::$_config['WRITABLE_SCOPE']);
-        }
-        return true;
+        return self::checkAccessableWithRevise($path,self::$_config['WRITE_LIMIT_ON'],self::$_config['WRITABLE_SCOPE']);
     }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -304,7 +218,7 @@ class Storage extends Core {
      * @param bool $recursion 是否进行递归读取
      * @return array
      */
-    public function _readDir($dirpath, $recursion=false){
+    public static function readDir(string $dirpath,bool $recursion=false){
         if(self::checkReadableWithRevise($dirpath)){
             return self::_readir($dirpath,$recursion);
         }
@@ -317,11 +231,10 @@ class Storage extends Core {
      * @param bool $_isouter 辅助参数,用于判断是外部调用还是内部的
      * @return array
      */
-    private static function _readir($dirpath, $recursion=false, $_isouter=true){
+    private static function _readir(string $dirpath,bool $recursion=false,bool $_isouter=true){
         static $_file = [];
         static $_dirpath_toread = null;
         if(true === $_isouter){
-            //外部调用,初始化
             $_file = [];
             $_dirpath_toread = $dirpath;
         }
@@ -347,39 +260,37 @@ class Storage extends Core {
 
     /**
      * 读取文件,参数参考read方法
-     * @param string $filepath
+     * @param string $filepath 文件路径
      * @param string $file_encoding
      * @param string $readout_encoding
-     * @param int|null $maxlen Maximum length of data read. The default of php is to read until end of file is reached. But I limit to 4 MB
-     * @return false|string 读取失败返回false
+     * @param int $maxlen Maximum length of data read. The default of php is to read until end of file is reached. But I limit to 4 MB
+     * @return int|string 读取可访问并且未受保护（runtime/rt文件夹下的）的文件时返回文件内容，否则返回0表示无法获取（读取可访问且未受保护的文件夹内容）
      */
-    public static function _read($filepath, $file_encoding='UTF-8',$readout_encoding='UTF-8',$maxlen=4094304){
-        if(!self::checkReadableWithRevise($filepath)) return null;
-        if(!is_file($filepath)){
-            // 文件不存在，直接返回false
-            return false;
-        }
-        $content = file_get_contents($filepath,null,null,null,$maxlen);//限制大小为2M
-        if(false === $content) return false;//false on failure
-        if(null === $file_encoding or $file_encoding === $readout_encoding){
-            return $content;//return the raw content or what the read is what the need
-        }else{
-            $readoutEncode = "{$readout_encoding}//IGNORE";
-            if(is_string($file_encoding) and false === strpos($file_encoding,',')){
-                return iconv($file_encoding,$readoutEncode,$content);
+    public static function read(string $filepath,string $file_encoding='UTF-8',string $readout_encoding='UTF-8',int $maxlen=4094304){
+        if(self::checkReadableWithRevise($filepath) and is_file($filepath)){
+            $content = file_get_contents($filepath,null,null,null,$maxlen);//限制大小为2M
+            if(false === $content) return false;//false on failure
+            if(null === $file_encoding or $file_encoding === $readout_encoding){
+                return $content;//return the raw content or what the read is what the need
+            }else{
+                $readoutEncode = "{$readout_encoding}//IGNORE";
+                if(is_string($file_encoding) and false === strpos($file_encoding,',')){
+                    return iconv($file_encoding,$readoutEncode,$content);
+                }
+                return mb_convert_encoding($content,$readoutEncode,$file_encoding);
             }
-            return mb_convert_encoding($content,$readoutEncode,$file_encoding);
         }
+        return Storage::IS_EMPTY;
     }
 
     /**
      * 确定文件或者目录是否存在
      * 相当于 is_file() or is_dir()
      * @param string $filepath 文件路径
-     * @return int 0表示目录不存在,<0表示是目录 >0表示是文件,可以用Storage的三个常量判断
+     * @return int 0表示目录不存在或者无法访问,1表示是目录 2表示是文件
      */
-    public static function _has($filepath){
-        if(!self::checkReadableWithRevise($filepath)) return null;
+    public static function has(string $filepath){
+        if(!self::checkReadableWithRevise($filepath)) return Storage::IS_EMPTY;
         if(is_dir($filepath)) return Storage::IS_DIR;
         if(is_file($filepath)) return Storage::IS_FILE;
         return Storage::IS_EMPTY;
@@ -389,21 +300,47 @@ class Storage extends Core {
      * 返回文件内容上次的修改时间
      * @param string $filepath 文件路径
      * @param int $mtime 修改时间
-     * @return int|bool|null 如果是修改时间的操作返回的bool;如果是获取修改时间,则返回Unix时间戳;
+     * @return int|bool 如果是修改时间的操作返回的bool;如果是获取修改时间,则返回Unix时间戳;
      */
-    public static function _mtime($filepath,$mtime=null){
-        if(!self::checkReadableWithRevise($filepath)) return null;
-        return file_exists($filepath)?null === $mtime?filemtime($filepath):touch($filepath,$mtime):false;
+    public static function mtime(string $filepath,int $mtime=null){
+        if(null !== $mtime){
+            //设置时间,需要写的权限
+            if(!self::checkWritableWithRevise($filepath)) return Storage::IS_EMPTY;
+            return touch($filepath,$mtime);
+        }else{
+            if(!self::checkReadableWithRevise($filepath)) return Storage::IS_EMPTY;
+            return file_exists($filepath) ? filemtime($filepath) : Storage::IS_EMPTY;
+        }
     }
 
     /**
      * 获取文件按大小
+     * 注：即便filesize加了@也无法防止系统的报错
      * @param string $filepath 文件路径
-     * @return int|false|null 按照字节计算的单位;
+     * @return int|false|null 按照字节计算的单位,返回false表示是文件夹
      */
-    public static function _size($filepath){
-        if(!self::checkReadableWithRevise($filepath)) return null;
-        return file_exists($filepath)?filesize($filepath):false;//即便是加了@filesize也无法防止系统的报错
+    public static function size($filepath){
+        if(!self::checkReadableWithRevise($filepath)) return Storage::IS_EMPTY;//文件在保护范围内
+        if(is_file($filepath)){
+            return filesize($filepath);
+        }elseif(is_dir($filepath)){
+            return self::_sizeDir($filepath);
+        }else{
+            return Storage::IS_EMPTY;//文件无法访问
+        }
+    }
+
+    public static function _sizeDir($dir){
+        $sizeResult = 0;
+        $handle = opendir($dir);
+        while (false!==($FolderOrFile = readdir($handle))) {
+            if($FolderOrFile != '.' && $FolderOrFile != '..') {
+                $file = "$dir/$FolderOrFile";
+                $sizeResult += is_dir($file)?self::_sizeDir($file) : filesize($file);
+            }
+        }
+        closedir($handle);
+        return $sizeResult;
     }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -415,7 +352,7 @@ class Storage extends Core {
      * @param int $auth 文件夹权限
      * @return bool 文件夹已经存在的时候返回false,成功创建返回true
      */
-    public static function _mkdir($dir, $auth = 0766){
+    public static function mkdir($dir, $auth = 0766){
         if(!self::checkWritableWithRevise($dir)) return false;
         return is_dir($dir)?chmod($dir,$auth):mkdir($dir,$auth,true);
     }
@@ -428,22 +365,22 @@ class Storage extends Core {
      * @param bool $_check  内部标记
      * @return bool
      */
-    public static function _chmod($path, $auth = 0766,$_check=true){
+    public static function chmod($path, $auth = 0766,$_check=true){
         if($_check and (!self::checkWritableWithRevise($path) or !file_exists($path))) return false;
 
         if (is_file($path)){
-            return @chmod($path,$auth);
+            return chmod($path,$auth);
         }else{
             if (!$dh = opendir($path)) return false;
             while (($file = readdir($dh)) !== false){
                 if ($file != '.' && $file != '..') {
                     $fullpath = $path . DIRECTORY_SEPARATOR . $file;
-                    @chmod($fullpath,$auth);
-                    return self::_chmod($fullpath,$auth,false);
+                    chmod($fullpath,$auth);
+                    return self::chmod($fullpath,$auth,false);
                 }
             }
             closedir($dh);
-            return @chmod($path,$auth);
+            return chmod($path,$auth);
         }
     }
 
@@ -456,7 +393,7 @@ class Storage extends Core {
      * @param int $atime 文件访问时间，如果未设置，则值设置为mtime相同的值
      * @return bool 是否成功|返回null表示在访问的范围之外
      */
-    public static function _touch($filepath, $mtime = null, $atime = null){
+    public static function touch($filepath, $mtime = null, $atime = null){
         if(!self::checkWritableWithRevise($filepath)) return null;
         self::checkAndMakeSubdir($filepath) or SharinException::throwing("Check path '$filepath' failed");
         return touch($filepath, $mtime,$atime);
@@ -469,7 +406,7 @@ class Storage extends Core {
      * @param bool $recursion 删除的目标是目录时,若目录下存在文件,是否进行递归删除,默认为false
      * @return bool
      */
-    public static function _unlink($filepath,$recursion=false){
+    public static function unlink($filepath,$recursion=false){
         if(!self::checkWritableWithRevise($filepath)) return null;
         if(is_file($filepath)){
             return unlink($filepath);
@@ -485,7 +422,7 @@ class Storage extends Core {
      * @param string $text_encode encode of content,it will be 'UTF-8' while scruipt file is encode with 'UTF-8',but sometime it's not expect
      * @return bool
      */
-    public static function _write($filepath,$content,$write_encode='UTF-8',$text_encode='UTF-8'){
+    public static function write($filepath,$content,$write_encode='UTF-8',$text_encode='UTF-8'){
         if(!self::checkWritableWithRevise($filepath)) return null;
         self::checkAndMakeSubdir($filepath) or SharinException::throwing("Check path '$filepath' failed");
         //文本编码检测
@@ -505,7 +442,7 @@ class Storage extends Core {
      * @param string $text_encode 文本本身的编码格式,默认使用UTF-8的编码格式
      * @return bool
      */
-    public static function _append($filepath,$content,$write_encode='UTF-8',$text_encode='UTF-8'){
+    public static function append($filepath,$content,$write_encode='UTF-8',$text_encode='UTF-8'){
         if(!self::checkWritableWithRevise($filepath)) return null;
         //文件不存在时
         if(!is_file($filepath)) return self::write($filepath,$content,$write_encode,$text_encode);

@@ -7,11 +7,10 @@
  */
 
 namespace Sharin\Core;
-use Sharin\Core;
+use Sharin\Component;
 
 /**
- * Class Cache
- * manage the cache of this system
+ * Class Cache 缓存控制类
  *
  * @method string|false get(string $name,$replace=null) static 读取缓存
  * @method bool has(string $name) static 判断缓存是否存在
@@ -21,55 +20,49 @@ use Sharin\Core;
  *
  * @package Sharin\Core
  */
-class Cache extends Core {
-
-    const CONF_NAME = 'cache';
-    const CONF_CONVENTION = [
-        DRIVER_DEFAULT_INDEX => 0,
-        DRIVER_CLASS_LIST => [
-            'Sharin\\Core\\Cache\\File',
-            'Sharin\\Core\\Cache\\Memcache',
-        ],
-        DRIVER_CONFIG_LIST => [
-            [
-                //from thinkphp ,match case
-                'expire'        => 0,
-                'cache_subdir'  => false,
-                'path_level'    => 1,
-                'prefix'        => '',
-                'length'        => 0,
-                'path'          => SR_PATH_RUNTIME.'/cache/file/',
-                'data_compress' => false,
-            ],
-            [
-                'host'      => 'localhost',
-                'port'      => 11211,
-                'expire'    => 0,
-                'prefix'    => '',
-                'timeout'   => 1000, // 超时时间（单位：毫秒）
-                'persistent'=> true,
-                'length'    => 0,
-            ],
-        ],
-        //5分钟
-        'DEFAULT_CACHE_EXPIRE'  => 300,
-    ];
-
+class Cache extends Component {
+    /**
+     * @var string
+     */
+    protected static $name = 'cache';
     /**
      * @var array id堆栈
      */
     private static $idStack = [];
-    /**
-     * @var string
-     */
-    private static $error = '';
 
-    /**
-     * 获取错误信息
-     * @return string
-     */
-    public static function getError(){
-        return self::$error;
+    public static function __initialization(array $config = null){
+        parent::__initialization([
+            BASE_ON_DRIVER        => true,   //静态方法是否基于驱动
+            BASED_DRIVER_INDEX    => 0,      //静态方法基于的驱动角标
+
+            DRIVER_CLASS_LIST => [
+                'Sharin\\Core\\Cache\\File',
+                'Sharin\\Core\\Cache\\Memcache',
+            ],
+            DRIVER_CONFIG_LIST => [
+                [
+                    //from thinkphp ,match case
+                    'expire'        => 0,
+                    'cache_subdir'  => false,
+                    'path_level'    => 1,
+                    'prefix'        => '',
+                    'length'        => 0,
+                    'data_compress' => false,
+                    'path'          => SR_PATH_RUNTIME.'/cache/file/',
+                ],
+                [
+                    'host'      => 'localhost',
+                    'port'      => 11211,
+                    'expire'    => 0,
+                    'prefix'    => '',
+                    'timeout'   => 1000, // 超时时间（单位：毫秒）
+                    'persistent'=> true,
+                    'length'    => 0,
+                ],
+            ],
+            //5分钟
+            'DEFAULT_CACHE_EXPIRE'  => 300,
+        ]);
     }
 
     /**
@@ -97,20 +90,20 @@ class Cache extends Core {
             if(isset(self::$idStack[$level])){
                 $identify = self::$idStack[$level];
                 if($id4check and $id4check !== $identify){
-                    self::$error = "输入的检查项'{$id4check}'不同于LEVEL-{$level}的缓存项ID '{$identify}'，请确认!";
+                    self::$_error = "输入的检查项'{$id4check}'不同于LEVEL-{$level}的缓存项ID '{$identify}'，请确认!";
                     return false;
                 }else{
                     $content = ob_get_clean();
-                    $expire or $expire = self::getConfig('DEFAULT_CACHE_EXPIRE',3600);
+                    $expire or $expire = self::convention('DEFAULT_CACHE_EXPIRE',3600);
                     self::set($identify,$content,$expire);
                     return $content;
                 }
             }else{
-                self::$error = "LEVEL为'{$level}'的记录不存在于缓存栈中，OB缓存可能通过其他方式开启并且在为手动关闭的情况下调用endWith方法！";
+                self::$_error = "LEVEL为'{$level}'的记录不存在于缓存栈中，OB缓存可能通过其他方式开启并且在为手动关闭的情况下调用endWith方法！";
                 return false;
             }
         }else{
-            self::$error = 'OB缓存未处于开启状态！';
+            self::$_error = 'OB缓存未处于开启状态！';
             return false;
         }
     }
