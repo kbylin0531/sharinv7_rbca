@@ -52,6 +52,7 @@ class Trace {
      * @return bool
      */
     public static function show(array $keywords=null,array $trace=null,array $status=null){
+        if(SR_IS_CLI) return false;
         $trace and self::$trace = array_merge(self::$trace,$trace);
         $status and self::$status = array_merge(self::$status,$status);
 

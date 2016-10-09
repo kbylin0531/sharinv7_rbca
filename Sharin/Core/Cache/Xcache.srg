@@ -8,7 +8,7 @@
  */
 
 namespace Sharin\Core\Cache;
-use Sharin\Interfaces\CacheInterface;
+use Sharin\Interfaces\Core\CacheInterface;
 
 /**
  * Xcache缓存驱动

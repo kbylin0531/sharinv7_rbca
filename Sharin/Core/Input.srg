@@ -42,15 +42,6 @@ class Input {
         return ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') );
     }
 
-    /**
-     * Is cli Request?
-     * Test to see if a request was made from the command line
-     * @return bool
-     */
-    public static function isClient(){
-        return (php_sapi_name() === 'cli' OR defined('STDIN'));
-    }
-
     public static function getRequestHeaders($xss_clean = false){
         if (function_exists('apache_request_headers')){
             $headers = apache_request_headers();

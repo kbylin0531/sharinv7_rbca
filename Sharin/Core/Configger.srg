@@ -7,7 +7,7 @@
  * Time: 10:40 AM
  */
 namespace Sharin\Core;
-use Sharin\Core;
+use Sharin\C;
 use Sharin\Developer;
 use Sharin\SharinException;
 use Sharin\Utils;
@@ -16,7 +16,10 @@ use Sharin\Utils;
  * Class Configger 配置管理类
  * @package Sharin\Core
  */
-class Configger extends Core{
+class Configger {
+
+    use C;
+
     /**
      * 配置类型
      * 值使用字符串而不是效率更高的数字是处于可以直接匹配后缀名的考虑
@@ -30,7 +33,7 @@ class Configger extends Core{
     /**
      * @var string config file-build path
      */
-    private static $configs_path = SR_PATH_RUNTIME.'/'.SR_APP_NAME.'.confing.inc';
+    private static $configs_path = SR_PATH_RUNTIME.'/config.pack.inc';
     /**
      * @var array map of class fullname of its config name
      */
@@ -47,7 +50,7 @@ class Configger extends Core{
             'Sharin\\Core\\Router',
             'Sharin\\Library\\View',
         ],
-        'USER_CONFIG_PATH'  => SR_PATH_RUNTIME.'/dynamic_config/',
+        'USER_CONFIG_PATH'  => SR_PATH_RUNTIME.'/config/',
     ];
     /**
      * @var array
@@ -94,31 +97,27 @@ class Configger extends Core{
      * @return array
      */
     public static function parse($path,$type=null,callable $parser=null){
-        isset($type) or $type = pathinfo($path, PATHINFO_EXTENSION);
+        $type or $type = pathinfo($path, PATHINFO_EXTENSION);
         switch ($type) {
             case self::TYPE_PHP:
                 $result = include $path;
-                if(!is_array($result)){
-                    $result = [];
-                }
                 break;
             case self::TYPE_INI:
-                if(($result = parse_ini_file($path)) === false) $result = [];
+                $result = parse_ini_file($path);
                 break;
             case self::TYPE_YAML:
-                if(($result = yaml_parse_file($path)) === false) $result = [];
+                $result = yaml_parse_file($path);
                 break;
             case self::TYPE_XML:
                 $result = (array)simplexml_load_file($path);
                 break;
             case self::TYPE_JSON:
-//                var_dump(json_decode(file_get_contents($path),true));exit();
                 $result = json_decode(file_get_contents($path), true);
                 break;
             default:
                 $result = $parser?$parser($path):SharinException::throwing('无法解析配置文件');
         }
-        return $result;
+        return is_array($result)? $result : [];
     }
 
 //------------------------------------ class config -------------------------------------------------------------------------------------
@@ -131,7 +130,6 @@ class Configger extends Core{
     public static function load($clsnm){
         if(!isset(self::$_cache[$clsnm])){
             $outer = self::loadOuter($clsnm);
-//            if(strpos($clsnm,'Dispatcher')) \Sharin\dumpout($outer);
             $inner = self::loadInner($clsnm);
             $outer and $inner = array_merge($inner,$outer);
             self::$_cache[$clsnm] = $inner;
@@ -153,11 +151,11 @@ class Configger extends Core{
         //读取全局配置
         self::$_cache[$clsnm] = is_readable($path)?include $path:[];
         //应用配置读取
-        $appconf = SR_PATH_APP."/Config/{$cname}.php";
-//        if(strpos($clsnm,'Dispatcher')) \Sharin\dumpout(include $appconf,is_readable($appconf),$appconf,Utils::merge(self::$_cache[$clsnm],include $appconf));
-        if(is_readable($appconf)){
-            self::$_cache[$clsnm] = Utils::merge(self::$_cache[$clsnm],include $appconf,true);
-        }
+//        $appconf = SR_PATH_APP."/Config/{$cname}.php";
+////        if(strpos($clsnm,'Dispatcher')) \Sharin\dumpout(include $appconf,is_readable($appconf),$appconf,Utils::merge(self::$_cache[$clsnm],include $appconf));
+//        if(is_readable($appconf)){
+//            self::$_cache[$clsnm] = Utils::merge(self::$_cache[$clsnm],include $appconf,true);
+//        }
         return self::$_cache[$clsnm];
     }
 

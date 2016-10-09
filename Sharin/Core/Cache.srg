@@ -13,11 +13,11 @@ use Sharin\Core;
  * Class Cache
  * manage the cache of this system
  *
+ * @method string|false get(string $name,$replace=null) static 读取缓存
  * @method bool has(string $name) static 判断缓存是否存在
- * @method int get(string $name,$replace=null) static 读取缓存
- * @method boolean set(string $name,mixed $value,int $expire=null) static 写入缓存
- * @method int delete(string $name) static 删除缓存
- * @method int clean() static empty the cache
+ * @method bool set(string $name,mixed $value,int $expire=null) static 写入缓存
+ * @method bool delete(string $name) static 删除缓存
+ * @method bool clean() static empty the cache
  *
  * @package Sharin\Core
  */
@@ -38,7 +38,7 @@ class Cache extends Core {
                 'path_level'    => 1,
                 'prefix'        => '',
                 'length'        => 0,
-                'path'          => SR_PATH_RUNTIME.'/file_cache/',
+                'path'          => SR_PATH_RUNTIME.'/cache/file/',
                 'data_compress' => false,
             ],
             [
@@ -55,15 +55,19 @@ class Cache extends Core {
         'DEFAULT_CACHE_EXPIRE'  => 300,
     ];
 
-
-
     /**
      * @var array id堆栈
      */
-    public static $idStack = [];
+    private static $idStack = [];
+    /**
+     * @var string
+     */
+    private static $error = '';
 
-    private static $error = null;
-
+    /**
+     * 获取错误信息
+     * @return string
+     */
     public static function getError(){
         return self::$error;
     }
@@ -110,6 +114,4 @@ class Cache extends Core {
             return false;
         }
     }
-
-
 }

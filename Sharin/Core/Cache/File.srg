@@ -8,7 +8,7 @@
  */
 
 namespace Sharin\Core\Cache;
-use Sharin\Interfaces\CacheInterface;
+use Sharin\Interfaces\Core\CacheInterface;
 use Sharin\Core\Storage;
 use Sharin\SharinException;
 
@@ -26,7 +26,7 @@ class File implements CacheInterface {
         'length'        => 0,
         'data_compress' => false,
 
-        'path'          => SR_PATH_RUNTIME.'Cache/File/',
+        'path'          => SR_PATH_RUNTIME.'/cache/file/',
     ];
 
     /**
@@ -78,7 +78,7 @@ class File implements CacheInterface {
         if ($this->options['prefix']) {
             $name = $this->options['prefix'] . DIRECTORY_SEPARATOR . $name;
         }
-        $filename = $this->options['path'] . $name . '.php';
+        $filename = $this->options['path'] . $name . '.cache';
         $dir = dirname($filename);
         Storage::mkdir($dir) or SharinException::throwing("Failed to mkdir '{$dir}'");
         return $filename;
@@ -116,7 +116,7 @@ class File implements CacheInterface {
      * @return bool
      */
     public static function checkExpire($path,$expire){
-        return 0 != $expire && SR_NOW > (Storage::mtime($path) + $expire);
+        return 0 != $expire && time() > (Storage::mtime($path) + $expire);
     }
 
 
@@ -134,13 +134,15 @@ class File implements CacheInterface {
         }
         $content = file_get_contents($filename);
         if (false !== $content) {
-            $expire = (int) substr($content, 8, 12);
+//            $expire = (int) substr($content, 8, 12);
+            $expire = (int) substr($content, 0, 12);
             if (self::checkExpire($filename,$expire)) {
                 //缓存过期删除缓存文件
                 $this->delete($filename);
                 return $default;
             }
-            $content = substr($content, 20, -3);
+//            $content = substr($content, 20, -3);
+            $content = substr($content, 12);
             if ($this->options['data_compress'] && function_exists('gzcompress')) {
                 //启用数据压缩
                 $content = gzuncompress($content);
@@ -170,7 +172,8 @@ class File implements CacheInterface {
             //数据压缩
             $data = gzcompress($data, 3);
         }
-        $data   = "<?php\n//" . sprintf('%012d', $expire) . $data . "\n?>";
+//        $data   = "<?php\n//" . sprintf('%012d', $expire) . $data . "\n?_>";
+        $data   = sprintf('%012d', $expire) . $data;
         $result = file_put_contents($filename, $data);
         if ($result) {
             if ($this->options['length'] > 0) {

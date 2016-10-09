@@ -6,19 +6,16 @@ use Sharin\Core\Router;
 use Sharin\Developer;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Exceptions\RouteParseFailedException;
-use Sharin\Utils;
-use Sharin\Library\Response;
-//禁止客户端模式访问
-if( PHP_SAPI === 'cli') die('only run in web mode');
+use Sharin\SharinException as SE;
 //获取开始运行时状态
 $GLOBALS['web_begin'] = [
     $_SERVER['REQUEST_TIME_FLOAT'],
     memory_get_usage(),
 ];
 
-
 //---------------------------------------- 通用常量定义 ---------------------------------------------//
 include __DIR__.'/Common/constant.inc';
+if(SR_IS_CLI) die('only run in web mode');
 //-------------------------- WEB模式常量定义 --------------------------------------------------//
 define('SR_NOW_MICRO',  $_SERVER['REQUEST_TIME_FLOAT']);//(int)($_SERVER['REQUEST_TIME_FLOAT']*1000)//isset($_SERVER['REQUEST_TIME_FLOAT'])? $_SERVER['REQUEST_TIME_FLOAT']:microtime(true)
 define('SR_NOW',        $_SERVER['REQUEST_TIME']);
@@ -86,58 +83,14 @@ final class Sharin {
         }
 
         //行为注册
-        spl_autoload_register([ClassLoader::class,'load'],false,true) or die('Failed to register autoload !');
-        self::$_prev_error_handler = set_error_handler(function($code, $message, $file, $line){
-            Behaviour::listen(ON_ERROR);
-
-            self::$convention['EXCEPTION_CLEAN'] and Response::cleanOutput();
-            if(SR_IS_AJAX) exit("File:{$file}   Line:{$line} Message:{$message}\n");
-            if(SR_DEBUG_MODE_ON)  Response::sendHttpStatus(403,'Resource Error!');
-
-            $trace = debug_backtrace();
-            $vars = [
-                'message'   => "C:{$code}   S:{$message}",
-                'position'  => "File:{$file}   Line:{$line}",
-                'trace'     => $trace, //be careful
-            ];
-
-            if(SR_DEBUG_MODE_ON){
-                Utils::loadTemplate('error',$vars);
-            }else{
-                Utils::loadTemplate('user_error');
-            }
-            Behaviour::listen(ON_ERROR_END);
-        });
-        self::$_prev_exception_handler = set_exception_handler(function(Throwable $e) {
-            Behaviour::listen(ON_EXCEPTION);
-
-            self::$convention['EXCEPTION_CLEAN'] and Response::cleanOutput();
-            if(SR_IS_AJAX) exit($e->getMessage());
-            SR_DEBUG_MODE_ON or Response::sendHttpStatus(403,'Resource Exception!');
-
-            $trace = $e->getTrace();
-            if(!empty($trace[0])){
-                empty($trace[0]['file']) and $trace[0]['file'] = 'Unkown file';
-                empty($trace[0]['line']) and $trace[0]['line'] = 'Unkown line';
-
-                $vars = [
-                    'message'   => get_class($e).' : '.$e->getMessage(),
-                    'position'  => 'File:'.$trace[0]['file'].'   Line:'.$trace[0]['line'],
-                    'trace'     => $trace,
-                ];
-                if(SR_DEBUG_MODE_ON){
-                    Utils::loadTemplate('exception',$vars);
-                }else{
-                    Utils::loadTemplate('user_error');
-                }
-            }else{
-                Utils::loadTemplate('user_error');
-            }
-            Behaviour::listen(ON_EXCEPTION_END);
-        });
-        register_shutdown_function(function (){/* 脚本结束时将会自动输出，所以不能把输出控制语句放到这里 */
+        ClassLoader::register();
+        self::$_prev_error_handler = set_error_handler([SE::class,'handleError']);
+        self::$_prev_exception_handler = set_exception_handler([SE::class,'handleException']);
+        register_shutdown_function(function (){/* 脚本结束时缓存区域的内容将会自动输出，所以不能把输出控制语句放到这里 */
+            //行为监听
             Behaviour::listen(ON_SHUTDOWN);
-            if(SR_PAGE_TRACE_ON and !SR_IS_AJAX) Developer::trace();//show the trace info
+            //显示trace
+            if(SR_PAGE_TRACE_ON and !SR_IS_AJAX) Developer::trace();
         });
 
         Behaviour::listen(ON_INITED);

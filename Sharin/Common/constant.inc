@@ -35,6 +35,7 @@ const ACTION_DELETE = 3;//删除操作,将使用到$_where字段
 //其他
 const DS = DIRECTORY_SEPARATOR;
 
+const SR_IS_CLI = PHP_SAPI === 'cli';
 define('SR_IS_WIN',false !== stripos(PHP_OS, 'WIN'));//const IS_WINDOWS = PHP_OS === 'WINNT';
 defined('SR_DEBUG_MODE_ON') or define('SR_DEBUG_MODE_ON', true);
 const SR_OS_ENCODING = 'UTF-8';//系统编码

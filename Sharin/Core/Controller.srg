@@ -20,7 +20,6 @@ use Sharin\Utils;
  * @property View $view
  * @property Logger $log
  *
- *
  * @package Sharin\Core
  */
 class Controller {

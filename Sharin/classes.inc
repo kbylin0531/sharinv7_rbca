@@ -1,12 +1,15 @@
 <?php
 namespace Sharin;
-
+use Sharin\Core\Logger;
+use Sharin\Exceptions\ComponentMissDriverException;
+use Throwable;
 use Exception;
 use Sharin\Core\Trace;
 use Sharin\Behaviours\StaticCacheBehaviour;
 use Sharin\Core\Configger;
 use Sharin\Exceptions\MethodNotFoundException;
 use Sharin\Exceptions\ParameterInvalidException;
+use Sharin\Library\Response;
 
 /**
  * Class Utils
@@ -88,13 +91,13 @@ final class Utils {
 
     /**
      * 检查继承关系
-     * @param $classnm
-     * @param $name
+     * @param string $myname
+     * @param string $parentnm
      * @return bool
      */
-    public static function checkParent($classnm,$name){
-        $list = class_parents($classnm,false);
-        return isset($list[$name]);
+    public static function checkExtends(string$myname,string $parentnm){
+        $list = class_parents($myname,false);
+        return isset($list[$parentnm]);
     }
 
     /**
@@ -103,7 +106,7 @@ final class Utils {
      * @param $name
      * @return bool
      */
-    public static function checkInterface($classnm,$name){
+    public static function checkImplement($classnm,$name){
         $list = class_implements($classnm,false);
         return isset($list[$name]);
     }
@@ -114,7 +117,7 @@ final class Utils {
      * @param $name
      * @return bool
      */
-    public static function checkTrait($classnm,$name){
+    public static function checkTraitUse($classnm,$name){
         $list = class_uses($classnm,false);
         return isset($list[$name]);
     }
@@ -402,7 +405,7 @@ final class Developer {
         static $index = 0;
         if(!SR_DEBUG_MODE_ON) return;
         if(null === $message){
-            self::$showTrace and Trace::show(self::$highlightes,self::$_traces,self::$_status);
+            !SR_IS_CLI and self::$showTrace and Trace::show(self::$highlightes,self::$_traces,self::$_status);
         }else{
             $location = debug_backtrace();
             if(isset($location[0])){
@@ -491,6 +494,11 @@ final class ClassLoader {
             if(is_file($path)) include self::$map[$clsnm] = $path;
         }
         Utils::callStatic($clsnm,'__initializationize');
+
+        //检查是否存在继承关系
+        if(Utils::checkExtends($clsnm,Component::class)){
+            call_user_func([$clsnm,'__initialization']);
+        }
     }
 
     /**
@@ -499,9 +507,8 @@ final class ClassLoader {
      * @throws SharinException
      */
     public static function register(callable $autoloader=null){
-        null === $autoloader and $autoloader = [static::class,'load'];
-        if(!spl_autoload_register($autoloader,false,true)){
-            throw new SharinException('Faile to register class autoloader!');
+        if(!spl_autoload_register($autoloader?$autoloader:[static::class,'load'],false,true)){
+            SharinException::throwing('Faile to register class autoloader!');
         }
     }
 
@@ -537,6 +544,73 @@ class SharinException extends Exception {
         $clsnm = static::class;//extend class name
         throw new $clsnm(func_get_args());
     }
+
+    /**
+     * 处理错误信息
+     * @param $code
+     * @param $message
+     * @param $file
+     * @param $line
+     */
+    public static function handleError($code, $message, $file, $line){
+        Behaviour::listen(ON_ERROR);
+
+        Response::cleanOutput();//清空之前的输出
+        if(SR_IS_AJAX) exit("File:{$file}   Line:{$line} Message:{$message}\n");
+        if(SR_DEBUG_MODE_ON)  Response::sendHttpStatus(403,'Resource Error!');
+
+        $trace = debug_backtrace();
+        $vars = [
+            'message'   => "C:{$code}   S:{$message}",
+            'position'  => "File:{$file}   Line:{$line}",
+            'trace'     => $trace, //be careful
+        ];
+
+        if(SR_DEBUG_MODE_ON){
+            Utils::loadTemplate('error',$vars);
+        }else{
+            Utils::loadTemplate('user_error');
+        }
+        Behaviour::listen(ON_ERROR_END);
+    }
+
+    /**
+     * 处理异常
+     * @param Throwable $e
+     */
+    public static function handleException(Throwable $e) {
+        Behaviour::listen(ON_EXCEPTION);
+
+        Response::cleanOutput();
+        if(SR_IS_AJAX) {
+            $message = $e->getMessage();
+            Logger::record($message);
+            exit($message);
+        }
+        SR_DEBUG_MODE_ON or Response::sendHttpStatus(403,'Resource Exception!');
+
+        $trace = $e->getTrace();
+        if(!empty($trace[0])){
+            empty($trace[0]['file']) and $trace[0]['file'] = 'Unkown file';
+            empty($trace[0]['line']) and $trace[0]['line'] = 'Unkown line';
+
+            $vars = [
+                'message'   => get_class($e).' : '.$e->getMessage(),
+                'position'  => 'File:'.$trace[0]['file'].'   Line:'.$trace[0]['line'],
+                'trace'     => $trace,
+            ];
+            if(SR_DEBUG_MODE_ON){
+                Developer::trace($vars);//页面跟踪错误
+                Utils::loadTemplate('exception',$vars);
+            }else{
+                Utils::loadTemplate('user_error');
+            }
+        }else{
+            Utils::loadTemplate('user_error');
+        }
+        Behaviour::listen(ON_EXCEPTION_END);
+    }
+
 }
 /**
  * Trait C
@@ -677,6 +751,130 @@ trait I {
     }
 }
 
+/**
+ * Class Component 组件类
+ *
+ * 规则：
+ *  一、驱动中存在与实例名称一致的方法
+ *      调用示例如下：
+ *          Component::{method}();
+ *          Component::instantiate()->{method}();
+ *  二、静态调用可以基于实例，需要设置
+ *      设置了 BASE_ON_INSTANCE = true 时，类加载时会自动初始化驱动
+ *
+ * @package Sharin
+ */
+abstract class Component {
+    /**
+     * 继承类配置
+     * @var array
+     */
+    private static $_conventions = [];
+
+    /**
+     * @var object[] 静态驱动列表
+     */
+    private static $_static_drivers = [];
+    /**
+     * @var object[] 驱动列表
+     */
+    private static $_drivers = [];
+    /**
+     * 类自动加载时自动调用
+     * @param array|null $config 参数非空是留给继承类覆盖时调用的
+     * @return void
+     */
+    public static function __initialization(array $config = null){
+        static $_convention = [ /* jito wule tigo xinen */
+            'BASE_ON_DRIVER'        => FALSE,   //静态方法是否基于驱动
+            'BASED_DRIVER_INDEX'    => '',      //静态方法基于的驱动角标
+
+            'DRIVER_CLASS_LIST'     => [],      //驱动类的列表
+            'DRIVER_CONFIG_LIST'    => [],      //驱动类列表参数
+        ];
+        if(null !== $config){
+            $config= Utils::merge($_convention,$config,false);
+        }else{
+            $config = $_convention;
+        }
+
+        self::$_conventions[static::class]  = $config;
+    }
+
+    /**
+     * 获取静态驱动
+     * @param bool $throw 不存在驱动时是否直接抛出异常
+     * @return object|false 返回驱动，驱动不存在时返回false
+     * @throws ComponentMissDriverException 缺少驱动列表时抛出异常
+     */
+    protected static function getStaticDriver($throw=false){
+        $static = static::class;
+        if(!isset(self::$_static_drivers[$static])){
+            if(false === self::convention('BASE_ON_INSTANCE',false)){
+                if($throw){
+                    throw new ComponentMissDriverException($static,'Not open');
+                }else{
+                    return false;
+                }
+            }
+            if(false === ($clsnm = self::convention('BASED_INSTANCE_DRIVER_NAME',false))){
+                throw new ComponentMissDriverException($static,'Driver not found');
+            }
+            self::$_static_drivers[$static] = new $clsnm(self::convention('BASED_INSTANCE_DRIVER_PARAMS',null));
+        }
+        return self::$_static_drivers[$static];
+    }
+
+    /**
+     * 获取配置（规矩）
+     * @param string $name 配置名称，涉及到子配置时使用"."连接
+     * @param mixed $alternate 替补，如果目标配置不存在
+     * @return mixed
+     */
+    public static function convention(string $name='',mixed $alternate=null){
+        $clsnm = static::class;
+        isset(self::$_conventions[$clsnm]) or self::$_conventions[$clsnm] = [];
+        if(empty($name)){
+            return self::$_conventions[$clsnm];
+        }elseif(strpos($name,'.') !== false){/* ummo yule "."ao qudo lofyi xinen  */
+            $target = self::$_conventions[$clsnm];
+            $name = explode('.',$name);
+            foreach ($name as $nm) {
+                if(isset($target[$nm])){
+                    $target = $target[$nm];
+                }else{
+                    return $alternate;
+                }
+            }
+            return $target;
+        }else{
+            return isset(self::$_conventions[$clsnm][$name]) ? self::$_conventions[$clsnm][$name] : $alternate;
+        }
+    }
+
+    /**
+     * 获取自身的一个驱动实例
+     * 来实现自身的操作
+     * @param int|string|null $index 角标，如果是null时表示自动获取
+     * @return object|false
+     */
+    public static function instance($index=null){
+        $static = static::class;
+        isset(self::$_drivers[$static]) or self::$_drivers[$static] = [];
+        if(!isset(self::$_drivers[$static][$index])){
+            if(null === $index){
+                /* mao ge hua,hofe "reset" o hofei false */
+                $clsnm = reset(self::convention('DRIVER_CLASS_LIST',[]));
+                if(false === $clsnm) return false;
+                $params = reset(self::convention('DRIVER_CONFIG_LIST',[]));
+                self::$_drivers[$static][$index] = $params ? new $clsnm($params) : new $clsnm();
+            }
+        }
+        return self::$_drivers[$static][$index];
+    }
+
+}
+
 
 /**
  * Class Core
@@ -764,6 +962,7 @@ abstract class Core {
         }
         return self::$_drivers[$clsnm][$identify];
     }
+//------------------------------------------------- 实例驱动 ----------------------------------------------------------//
     /**
      * @var object 实例的驱动实例，一实例一驱动
      */
@@ -781,7 +980,7 @@ abstract class Core {
     public function setDriver(object $driver){
         $this->_driver = $driver;
     }
-
+//------------------------------------------------- 魔术方法 ----------------------------------------------------------//
     /**
      * Use driver method as its instance method
      * @param string $method method name
