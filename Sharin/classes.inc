@@ -5,7 +5,6 @@ use Sharin\Exceptions\ComponentMissDriverException;
 use Throwable;
 use Exception;
 use Sharin\Core\Trace;
-use Sharin\Behaviours\StaticCacheBehaviour;
 use Sharin\Exceptions\MethodNotFoundException;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Library\Response;
@@ -33,7 +32,7 @@ final class Utils {
      * @param bool $clean it will clean the output cache if set to true
      * @param bool $isfile 判断是否是模板文件
      */
-    public static function loadTemplate(string $tpl,array $vars=null,bool $clean=true,bool $isfile=false){
+    public static function template(string $tpl,array $vars=null,bool $clean=true,bool $isfile=false){
         $clean and ob_get_level() > 0 and ob_end_clean();
         $vars and extract($vars, EXTR_OVERWRITE);
         $path = ($isfile or is_file($tpl))?$tpl:SR_PATH_FRAMEWORK."/Template/{$tpl}.php";
@@ -45,12 +44,11 @@ final class Utils {
      * C风格      如： sub_string
      * JAVA风格   如： SubString
      * @param string $str
-     * @param int $orien
-     * @return string
+     * @param bool $orien 转换方向，默认C 风格转 Java 风格
+     * @return string 返回风格转换后的类型
      */
-    public static function styleStr(string $str,int $orien=1){
-        return $orien?
-            ucfirst(preg_replace_callback('/_([a-zA-Z])/',function($match){return strtoupper($match[1]);},$str)):
+    public static function styleStr(string $str,bool $orien=true){
+        return $orien? ucfirst(preg_replace_callback('/_([a-zA-Z])/',function($match){return strtoupper($match[1]);},$str)):
             strtolower(ltrim(preg_replace('/[A-Z]/', '_\\0', $str), '_'));
     }
 
@@ -151,7 +149,7 @@ final class Utils {
      * @return string|false 转化失败返回false
      */
     public static function toSystemEncode($str,$strencode='UTF-8'){
-        return iconv($strencode,SR_OS_ENCODING.'//IGNORE',$str);
+        return $strencode === SR_OS_ENCODING? $str : iconv($strencode,SR_OS_ENCODING.'//IGNORE',$str);
     }
 
     /**
@@ -162,7 +160,7 @@ final class Utils {
      * @return string|false 转化失败返回false
      */
     public static function toProgramEncode($str, $program_encoding='UTF-8'){
-        return iconv(SR_OS_ENCODING,"{$program_encoding}//IGNORE",$str);
+        return $program_encoding === SR_OS_ENCODING? $str : iconv(SR_OS_ENCODING,"{$program_encoding}//IGNORE",$str);
     }
 
     /**
@@ -249,8 +247,8 @@ final class Utils {
 }
 
 /**
- * Class Behaviour
- * 行为控制,各个行为点的结合代表着应用的生命周期
+ * Class Behaviour 行为控制
+ * 各个行为组成了应用的生命周期
  * @package Sharin
  */
 final class Behaviour {
@@ -559,9 +557,9 @@ class SharinException extends Exception {
         ];
 
         if(SR_DEBUG_MODE_ON){
-            Utils::loadTemplate('error',$vars);
+            Utils::template('error',$vars);
         }else{
-            Utils::loadTemplate('user_error');
+            Utils::template('user_error');
         }
         Behaviour::listen(ON_ERROR_END);
     }
@@ -593,12 +591,12 @@ class SharinException extends Exception {
             ];
             if(SR_DEBUG_MODE_ON){
                 Developer::trace($vars);//页面跟踪错误
-                Utils::loadTemplate('exception',$vars);
+                Utils::template('exception',$vars);
             }else{
-                Utils::loadTemplate('user_error');
+                Utils::template('user_error');
             }
         }else{
-            Utils::loadTemplate('user_error');
+            Utils::template('user_error');
         }
         Behaviour::listen(ON_EXCEPTION_END);
     }

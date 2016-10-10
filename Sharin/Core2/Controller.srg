@@ -155,7 +155,7 @@ class Controller {
             'javascript:history.back(-1);':
             'javascript:window.close();';
 
-        Utils::loadTemplate('jump',$vars);
+        Utils::template('jump',$vars);
     }
 
     /**

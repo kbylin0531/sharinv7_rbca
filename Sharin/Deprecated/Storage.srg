@@ -7,6 +7,7 @@
  */
 
 namespace Sharin\Deprecated;
+use Sharin\Utils;
 
 /**
  * Class Storage
@@ -26,6 +27,39 @@ namespace Sharin\Deprecated;
  */
 class Storage
 {
+    /**
+     * @param $dirpath
+     * @param bool $recursion
+     * @param bool $_isouter 辅助参数,用于判断是外部调用还是内部的
+     * @return array
+     */
+    private static function _readir(string $dirpath,bool $recursion=false,bool $_isouter=true){
+        static $_file = [];
+        static $_dirpath_toread = null;
+        if(true === $_isouter){
+            $_file = [];
+            $_dirpath_toread = $dirpath;
+        }
+
+        $handler = opendir($dirpath);
+        while (($filename = readdir($handler))) {//未读到最后一个文件时候返回false,否则返回文件名称
+            if ($filename === '.' or $filename === '..' ) continue;
+            $fullpath = $dirpath.DIRECTORY_SEPARATOR.$filename;//子文件的完整路径
+            if(file_exists($fullpath)) {
+                $index = strpos($fullpath,$_dirpath_toread);
+                $_file[Utils::toProgramEncode(substr($fullpath,$index+strlen($_dirpath_toread)))] =
+                    str_replace('\\','/',Utils::toProgramEncode($fullpath));
+            }
+
+            if($recursion and is_dir($fullpath)) {
+                $_isouter = "{$_isouter}/{$filename}";
+                self::_readir($fullpath,$recursion,false);//递归,不清空
+            }
+        }
+        closedir($handler);//关闭目录指针
+        return $_file;
+    }
+
     /**
      * 获取文件权限，以linux的格式显示
      * @static
