@@ -47,7 +47,7 @@ class Storage extends Component {
             'READABLE_SCOPE'    => SR_PATH_BASE,
             'WRITABLE_SCOPE'    => [
                 SR_PATH_RUNTIME,                    //运行时文件
-                SR_PATH_BASE.'/Data/Runtime', //运行时配置文件
+                SR_PATH_DATA, //运行时配置文件
             ],
         ]);
         self::$_config = self::convention();
@@ -318,6 +318,10 @@ class Storage extends Component {
 
     /**
      * 返回文件内容上次的修改时间
+     *
+     * 注意：
+     *  windows下同下如果一个文件夹下级文件夹下一个文件发生了修改，那个这个下级文件文件夹的修改时间会发生变化，但是这个文件夹的修改时间不会发生变化
+     *
      * @param string $filepath 文件路径
      * @param int $mtime 修改时间
      * @return int|bool 如果是修改时间的操作返回的bool;如果是获取修改时间,则返回Unix时间戳;

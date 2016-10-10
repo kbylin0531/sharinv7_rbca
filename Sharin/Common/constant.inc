@@ -47,6 +47,7 @@ const SR_PATH_CONFIG    = SR_PATH_BASE.'/Config';//global config
 const SR_PATH_RUNTIME   = SR_PATH_BASE.'/Runtime';
 const SR_PATH_PUBLIC    = SR_PATH_BASE.'/Public';
 const SR_PATH_SERVICE   = SR_PATH_BASE.'/Service';
+const SR_PATH_DATA      = SR_PATH_BASE.'/Data';
 const SR_PATH_VENDOR    = SR_PATH_FRAMEWORK.'/Vendor';
 const SR_PATH_PLUGIN    = SR_PATH_FRAMEWORK.'/Plugins';
 
@@ -65,3 +66,8 @@ const ON_EXCEPTION_END  = 'onExceptionEnd';
 const ON_ERROR      = 'onError';
 const ON_ERROR_END  = 'onErrorEnd';
 
+
+//------------------------- 语言包 --------------------------------------//
+const LANG_ZH_CN = 'zh-cn';
+const LANG_ZH_TW = 'zh-tw';
+const LANG_EN_US = 'en-us';
