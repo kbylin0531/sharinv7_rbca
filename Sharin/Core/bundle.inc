@@ -1,6 +1,7 @@
 <?php
 namespace Sharin;
 use Sharin\Core\Logger;
+use Sharin\Core\Storage;
 use Sharin\Exceptions\ComponentMissDriverException;
 use Throwable;
 use Exception;
@@ -92,31 +93,34 @@ final class Utils {
      * @param string $parentnm
      * @return bool
      */
-    public static function checkExtends(string$myname,string $parentnm){
+    public static function checkExtends(string $myname,string $parentnm){
+        if(!class_exists($myname)) return false;
         $list = class_parents($myname,false);
         return isset($list[$parentnm]);
     }
 
     /**
      * 检查接口实现关系
-     * @param $classnm
-     * @param $name
+     * @param $myname
+     * @param $interfacename
      * @return bool
      */
-    public static function checkImplement($classnm,$name){
-        $list = class_implements($classnm,false);
-        return isset($list[$name]);
+    public static function checkImplement(string $myname,string $interfacename){
+        if(!class_exists($myname)) return false;
+        $list = class_implements($myname,false);
+        return isset($list[$interfacename]);
     }
 
     /**
      * 检查trait使用关系
-     * @param $classnm
-     * @param $name
+     * @param $myname
+     * @param $traitname
      * @return bool
      */
-    public static function checkTraitUse($classnm,$name){
-        $list = class_uses($classnm,false);
-        return isset($list[$name]);
+    public static function checkTraitUse(string $myname,string $traitname){
+        if(!class_exists($myname)) return false;
+        $list = class_uses($myname,false);
+        return isset($list[$traitname]);
     }
 
     /**
@@ -185,14 +189,18 @@ final class Utils {
      * @param bool $covermode 为true的情况下无论目标健是否存在否会覆盖，否则会先检测目标是否存在
      * @return mixed
      */
-    public static function merge(array $dest, array $sourse,bool $covermode=false){
+    public static function merge(array $dest, array $sourse,bool $covermode=true){
         foreach($sourse as $key=>$val){
             if($covermode){
                 //fugei mose
                 if (isset($dest[$key]) and is_array($val)) {
                     $dest[$key] = self::merge($dest[$key],$val,true);/* se shuju,zo erbi tyi */
                 }else{
-                    $dest[$key] = $val;
+                    if(is_int($key)){
+                        if(!in_array($val,$dest)) $dest[] = $val;
+                    }else{
+                        $dest[$key] = $val;
+                    }
                 }
             }else{
                 //kno saiqu wumao sai
@@ -200,7 +208,11 @@ final class Utils {
                     if (is_array($val)) {
                         $dest[$key] = self::merge($dest[$key],$val,false);
                     }else{
-                        $dest[$key] = $val;
+                        if(is_int($key)){
+                            if(!in_array($val,$dest)) $dest[] = $val;
+                        }else{
+                            $dest[$key] = $val;
+                        }
                     }
                 }
             }
@@ -607,6 +619,8 @@ class SharinException extends Exception {
 /**
  * Class Component 组件类
  *
+ * 调用静态方法等于直接使用系统内置的驱动，较实例化驱动高效
+ *
  * 规则：
  *  一、驱动中存在与实例名称一致的方法
  *      调用示例如下：
@@ -768,3 +782,205 @@ abstract class Component {
 
 }
 
+/**
+ * Class Configger 配置管理类
+ * @package Sharin\Core
+ */
+class Configger {
+    /**
+     * 配置类型
+     * 值使用字符串而不是效率更高的数字是处于可以直接匹配后缀名的考虑
+     */
+    const TYPE_PHP     = 'php';
+    const TYPE_INI     = 'ini';
+    const TYPE_YAML    = 'yaml';
+    const TYPE_XML     = 'xml';
+    const TYPE_JSON    = 'json';
+
+    /**
+     * @var array 本类的配置
+     */
+    private static $config = [
+        //是否开启Lite
+        'USE_LITE'          => true,
+        //Lite针对的类名称的列表
+        'LITE_CLASS_LIST'   => [
+            'Sharin\\Core\\Storage',
+            'Sharin\\Core\\Cache',
+        ],
+        //运行时配置目录（其下的配置文件只在运行时由程序生成）
+        'RUNTIME_CONF_PATH'  => SR_PATH_BASE.'/Data/Runtime/Configuration/',
+    ];
+
+    /**
+     * @var array 配置缓存
+     */
+    private static $_cache = [];
+
+    /**
+     * 初始化，配置管理类
+     * 允许多次调用
+     * @param array|null $config
+     */
+    public static function initialize(array $config=null){
+        null !== $config and self::$config = Utils::merge(self::$config,$config,true);
+
+        //清空之前的配置
+        self::$_cache = [];
+
+        if(self::$config['USE_LITE']){
+            //预处理后的文件
+            $litefile = SR_PATH_RUNTIME.'/configger.php';
+//            if(!Storage::has($litefile,Storage::READ_ACCESS) or Storage::mtime(SR_PATH_CONFIG) > Storage::mtime($litefile)){ //不能使用Storage的原因是避免Storage过早地出场
+            if(!is_file($litefile) or !is_readable($litefile) or filemtime(SR_PATH_CONFIG) > filemtime($litefile)) {
+                //缓存文件不存在，或者已经过期（配置目录比缓存文件新旧表示过期）需要重新编译
+                if(!empty(self::$config['LITE_CLASS_LIST'])) foreach (self::$config['LITE_CLASS_LIST'] as $clsnm){
+                    self::load($clsnm);
+                }
+                // Closure is not suggest in config file due to var_export could not do well with closure
+                // it will be translated to 'method Closure::__set_state()'
+                Storage::write($litefile,'<?php return '.var_export(self::$_cache,true).';') or SharinException::throwing("配置无法写入文件'{$litefile}'");
+
+                dumpout('缓存文件不存在，或者已经过期（配置目录比缓存文件新旧表示过期），已经完成lite文件的建立工作', self::$_cache);
+            }else{
+                //直接读取lite文件
+                self::$_cache = self::parse($litefile,self::TYPE_PHP);
+                dumpout('直接读取lite文件',class_exists('Sharin\\Core\\Storage',false)? 'Storage已经加载到内存中' : 'Storage未载入内存' ,self::$_cache);
+            }
+        }else{
+            //设么都不做，每次通过load方法加载外部配置都会将配置加入到缓存中
+            dumpout('设么都不做，每次通过load方法加载外部配置都会将配置加入到缓存中',self::$_cache);
+        }
+    }
+//------------------------------------ 类配置方法集合 : load <== loadInner + loadOuter -------------------------------------------------------------------------------------
+    /**
+     * 获取类的完整配置
+     * @param string $clsnm 类名称
+     * @param bool $is_component 该类是否继承自Component类
+     * @return array
+     */
+    public static function load(string $clsnm,bool $is_component=null){
+        if(!isset(self::$_cache[$clsnm])){
+            null === $is_component and $is_component = Utils::checkExtends($clsnm,Component::class);
+            self::$_cache[$clsnm] = self::loadInner($clsnm,$is_component);
+            self::$_cache[$clsnm] = Utils::merge(self::$_cache[$clsnm],self::loadOuter($clsnm,$is_component),true);//内部的配置即完整的，不需要外部额外添加，所以参数三设置为false(错误的，因为针对健为数字的情况，外部配置可能会无效)
+        }
+        return self::$_cache[$clsnm];
+    }
+
+    /**
+     * 获取类的内置配置
+     *  注：只有Component类及子类才能通过convention方法获取内置配置，其他类只能获取到空的数组，如果类不存在时也会返回空数组
+     * @param string $clsnm 类名称
+     * @param bool $is_component 该类是否继承自Component类
+     * @return array 返回类内部的配置
+     */
+    public static function loadInner(string $clsnm,bool $is_component=null){
+        null === $is_component and $is_component = Utils::checkExtends($clsnm,Component::class);
+        return $is_component ? call_user_func([$clsnm,'convention']) : [];
+    }
+
+    /**
+     * 获取类；类的外部配置（包括外部全局和外部应用两部分）
+     * @param string $clsnm 类名称
+     * @param bool $is_component 该类是否继承自Component类
+     * @return array
+     */
+    public static function loadOuter(string $clsnm,bool $is_component=null) {
+        null === $is_component and $is_component = Utils::checkExtends($clsnm,Component::class);
+
+        //获取类的标识符名称
+        $idname = $is_component ?
+            call_user_func([$clsnm,'getName']):
+            strtolower(str_replace('\\','/',ltrim($clsnm,'\\')));
+        //类的短名称与长完整名称添加对应
+//        self::$_map[$idname] = $clsnm;
+
+        strpos('.', $idname) !== false and $idname = str_replace('.', '/' ,$idname);
+
+        $path = SR_PATH_BASE."/Config/{$idname}.php";
+        //读取全局配置
+        $result = Storage::has($path,Storage::READ_ACCESS) ? self::parse($path,self::TYPE_PHP) : [];
+        if(defined('SR_PATH_APP')){
+            //应用配置读取
+            $appconf = SR_PATH_APP."/Config/{$idname}.php";
+            if(Storage::has($appconf,Storage::READ_ACCESS) and $appconf = self::parse($appconf,self::TYPE_PHP)){
+                is_array($appconf) and $result = Utils::merge($result,$appconf,true);
+            }
+        }
+        return $result;
+    }
+
+//------------------------------------ user config of dynamic -------------------------------------------------------------------------------------
+    /**
+     * read the user-defined config in SR_PATH_RUNTIME
+     * @param string $identify config identify
+     * @param mixed $replacement
+     * @return array
+     */
+    public static function read(string $identify,$replacement=[]){
+        $path = self::_id2path($identify,true);//读取时必须保证文件是存在的
+        if($path and Storage::has($path,Storage::READ_ACCESS)){
+            return self::parse($path,self::TYPE_PHP);
+        }
+        return $replacement;
+    }
+
+    /**
+     * write user-config to file
+     * @param string $identify
+     * @param array $config
+     * @return bool
+     */
+    public static function write(string $identify,array $config){
+        $path = self::_id2path($identify,false);
+        return Storage::write($path,'<?php return '.var_export($config,true).';');
+    }
+
+    /**
+     * 将配置项转换成配置文件路径
+     * 配置项中的"."会被替换为目录分隔符"/"
+     * @param string $item 配置项
+     * @param mixed $check 检查文件是否存在
+     * @return false|string 返回配置文件路径，参数二位true并且文件不存在时返回null
+     */
+    private static function _id2path($item,$check=true){
+        strpos($item,'.') and $item = str_replace('.',DIRECTORY_SEPARATOR,$item);
+        $path = self::$config['RUNTIME_CONF_PATH']."/{$item}.php";
+        return !$check || is_readable($path)?$path:false;
+    }
+
+
+//------------------------------------ 通用工具 -------------------------------------------------------------------------------------
+
+    /**
+     * parse config file into php array
+     * @param string $path 配置文件的路径
+     * @param string|null $type 配置文件的类型,参数为null时根据文件名称后缀自动获取
+     * @param callable $parser 配置解析方法 有些格式需要用户自己解析
+     * @return array
+     */
+    public static function parse(string $path,string $type='',callable $parser=null){
+        $type or $type = pathinfo($path, PATHINFO_EXTENSION);
+        switch ($type) {
+            case self::TYPE_PHP:
+                $result = include $path;
+                break;
+            case self::TYPE_INI:
+                $result = parse_ini_file($path);
+                break;
+            case self::TYPE_YAML:
+                $result = yaml_parse_file($path);
+                break;
+            case self::TYPE_XML:
+                $result = (array)simplexml_load_file($path);
+                break;
+            case self::TYPE_JSON:
+                $result = json_decode(file_get_contents($path), true);
+                break;
+            default:
+                $result = $parser?$parser($path):SharinException::throwing('无法解析配置文件');
+        }
+        return is_array($result)? $result : [];
+    }
+}

@@ -59,7 +59,7 @@ namespace {
     use Workerman\WebServer;
 
     require __DIR__.'/Common/constant.inc';
-    require __DIR__.'/classes.inc';
+    require __DIR__.'/Core/bundle.inc';
     require __DIR__.'/Common/environment.inc';
 
     //error  display

@@ -16,17 +16,70 @@ namespace {
 
 
     $files4readabletest = [
-        SR_PATH_BASE.'/$readfile1',
-        SR_PATH_BASE.'/.gitignore',
-        '/home',
-        '/home/asus/workspace/Sharingan/Sharin/Test',
-        '/home/asus/workspace/Sharingan/README.md',
-        '/home/asus/workspace/Sharingan/',
+//        SR_PATH_BASE.'/$readfile1',
+//        SR_PATH_BASE.'/.gitignore',
+//        '/home',
+//        '/home/asus/workspace/Sharingan/Sharin/Test',
+//        '/home/asus/workspace/Sharingan/README.md',
+//        '/home/asus/workspace/Sharingan/',
+
+        /**
+         * cd Runtime/
+         * sudo su
+        302  touch r
+        317  chmod o+r r
+        304  touch w
+        319  chmod o+w w
+        305  touch a
+        321  chmod o+rw a
+        306  touch no
+        最后看到的权限是：
+        total 8
+        drwxrw-r-- 2 asus asus 4096 10月 10 14:08 .
+        drwxrwxr-x 9 asus asus 4096 10月 10 11:35 ..
+        --w----r-- 1 root root    0 10月 10 14:08 r
+        --w-----w- 1 root root    0 10月 10 14:08 w
+        --w----rw- 1 root root    0 10月 10 14:08 a
+        --w------- 1 root root    0 10月 10 14:08 no
+         has的测试结果应该是
+        参数二为 Storage::ACCESS_NO_CHECK： //不检查权限
+        array (
+            0 => 1,
+            1 => 1,
+            2 => 1,
+            3 => 1,
+        ),
+        参数二为 Storage::READ_ACCESS： // 只检查读的权限
+        array (
+            0 => 1,
+            1 => 0,
+            2 => 1,
+            3 => 0,
+        ),
+        参数二为 Storage::WRITE_ACCESS： //只检查写的权限
+        array (
+            0 => 0,
+            1 => 1,
+            2 => 1,
+            3 => 0,
+        ),
+        参数二为 Storage::READ_ACCESS | Storage::WRITE_ACCESS： //检查是否同时拥有读写权限
+        array (
+            0 => 0,
+            1 => 0,
+            2 => 1,
+            3 => 0,
+        ),
+         */
+        SR_PATH_RUNTIME.'/r',
+        SR_PATH_RUNTIME.'/w',
+        SR_PATH_RUNTIME.'/a',
+        SR_PATH_RUNTIME.'/no',
     ];
-//    $result['has'] = [];
-//    foreach ($files4readabletest as $file) {
-//        $result['has'][] = Storage::has($file);
-//    }
+    $result['has'] = [];
+    foreach ($files4readabletest as $file) {
+        $result['has'][] = Storage::has($file,Storage::WRITE_ACCESS);
+    }
 //
 //    $result['size'] = [];
 //    foreach ($files4readabletest as $file) {
@@ -79,10 +132,10 @@ namespace {
 //    foreach ($files4writetest as $file) {
 //        $result['append'][] = Storage::append($file,"hello");
 //    }
-    $result['rmdir'] = [];
-    foreach ($files4writetest as $file) {
-        $result['rmdir'][] = Storage::unlink($file,true);
-    }
+//    $result['rmdir'] = [];
+//    foreach ($files4writetest as $file) {
+//        $result['rmdir'][] = Storage::unlink($file,true);
+//    }
 
 
 

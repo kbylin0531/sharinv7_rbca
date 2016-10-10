@@ -12,7 +12,7 @@ namespace {
     }
     include __DIR__.'/Common/constant.inc';
     include SR_PATH_FRAMEWORK.'/Common/debug_suit.inc';
-    include SR_PATH_FRAMEWORK.'/classes.inc';
+    include SR_PATH_FRAMEWORK.'/Core/bundle.inc';
 
     ClassLoader::register();
 

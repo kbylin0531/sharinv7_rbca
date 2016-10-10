@@ -27,6 +27,10 @@ class Storage extends Component {
     const IS_FILE   = 1;
     const IS_DIR    = 2;
 
+    const ACCESS_NO_CHECK = 0;
+    const READ_ACCESS = 1;
+    const WRITE_ACCESS= 2;
+
     protected static $name = 'storage';
 
     /**
@@ -42,8 +46,8 @@ class Storage extends Component {
             //需要注意的是可以访问scope下面的文件夹，但是不可以访问其本身
             'READABLE_SCOPE'    => SR_PATH_BASE,
             'WRITABLE_SCOPE'    => [
-                SR_PATH_RUNTIME,
-                SR_PATH_BASE.'/Public/rt/',//'rt' means 'runtime'
+                SR_PATH_RUNTIME,                    //运行时文件
+                SR_PATH_BASE.'/Data/Runtime', //运行时配置文件
             ],
         ]);
         self::$_config = self::convention();
@@ -93,7 +97,7 @@ class Storage extends Component {
         elseif ($Mode &0xC000) $Type = 's'; // Socket
         else $Type = 'u'; // UNKNOWN
 
-        // Determine les permissions par Groupe
+        // Determine les permissions par Groupe : ugo
         $Owner['r'] = ($Mode &00400) ? 'r' : '-';
         $Owner['w'] = ($Mode &00200) ? 'w' : '-';
         $Owner['x'] = ($Mode &00100) ? 'x' : '-';
@@ -297,13 +301,19 @@ class Storage extends Component {
      * 确定文件或者目录是否存在
      * 相当于 is_file() or is_dir()
      * @param string $filepath 文件路径
+     * @param int $auth 文件权限检测
      * @return int 0表示目录不存在或者无法访问,1表示是目录 2表示是文件
      */
-    public static function has(string $filepath){
+    public static function has(string $filepath,int $auth=0){
         if(!self::checkAccessableWithRevise($filepath,true)) return Storage::IS_EMPTY;
-        if(is_dir($filepath)) return Storage::IS_DIR;
-        if(is_file($filepath)) return Storage::IS_FILE;
-        return Storage::IS_EMPTY;
+        $type = is_dir($filepath) ? Storage::IS_DIR : (is_file($filepath) ? Storage::IS_FILE : Storage::IS_EMPTY);
+        if($auth & self::READ_ACCESS and !is_readable($filepath)){
+            return Storage::IS_EMPTY;
+        }
+        if($auth & self::WRITE_ACCESS and !is_writable($filepath)){
+            return Storage::IS_EMPTY;
+        }
+        return $type;
     }
 
     /**

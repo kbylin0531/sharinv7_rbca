@@ -38,7 +38,7 @@ trait C {
             self::$_cs[$clsnm] = Utils::constant($clsnm,'CONF_CONVENTION',[]);
 
             //load the outer config
-            $conf = Configger::load($clsnm);
+            $conf = \Sharin\Configger::load($clsnm);
             $conf and self::$_cs[$clsnm] = Utils::merge(self::$_cs[$clsnm],$conf,true);
         }
         //auto init

@@ -7,7 +7,7 @@ namespace {
 
     require __DIR__.'/Common/constant.inc';
     require __DIR__.'/Common/debug_suit.inc';
-    require __DIR__.'/classes.inc';
+    require __DIR__.'/Core/bundle.inc';
 
     ClassLoader::register();
 

@@ -780,7 +780,7 @@ class Model {
 
     public function data(array $info,array $base=null,$comparer=null){
         $data = $base?$base:$this->fields;
-        $data = Utils::merge($data,$info);
+        $data = Utils::merge($data,$info,false);
         Utils::filter($data,$comparer);
         return $data;
     }

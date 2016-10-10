@@ -42,7 +42,7 @@ if(SR_DEBUG_MODE_ON) {
 }
 
 //---------------------------------------- 加载类包 ---------------------------------------------//
-require __DIR__.'/classes.inc';
+require __DIR__.'/Core/bundle.inc';
 
 /**
  * Class Sharin
