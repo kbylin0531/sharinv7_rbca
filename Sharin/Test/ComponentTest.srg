@@ -11,9 +11,10 @@ use Sharin\Component;
 
 /**
  * Class ComponentTest
- *
  * @method dump() static
  *
+ *
+ * componenttest
  * @package Sharin\Test
  */
 class ComponentTest extends Component {
@@ -35,7 +36,6 @@ class ComponentTest extends Component {
                 ]
             ],      //驱动类列表参数
         ]);
-        \Sharin\dump(self::convention());
     }
 
 }

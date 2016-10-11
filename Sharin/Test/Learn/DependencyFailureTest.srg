@@ -1,0 +1,26 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: asus
+ * Date: 16-10-11
+ * Time: 下午1:40
+ */
+
+namespace Sharin\Test;
+
+use PHPUnit\Framework\TestCase;
+
+class DependencyFailureTest extends TestCase
+{
+    public function testOne()
+    {
+        $this->assertTrue(false);
+    }
+
+    /**
+     * @depends testOne
+     */
+    public function testTwo()
+    {
+    }
+}

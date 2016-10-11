@@ -77,3 +77,4 @@ Sharingan:
     25:Vendor与Plugins都引用了第三方的库，区别时Plugin对原先的库作了修改
     26:Sharin目录下的类都是可以内置到lite文件中的
     28:文件后缀改为srg 16.09.23
+    29:#!/usr/bin/env php 加入后可以直接输入PHP文件名像shell脚本那样执行（该命令的意思是使用环境变量中的php命令解析下面的脚本程序）

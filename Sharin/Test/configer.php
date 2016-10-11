@@ -6,7 +6,7 @@ namespace {
     use Sharin\Configger;
     use Sharin\Core\Storage;
 
-    include __DIR__.'/../tester.module';
+    include __DIR__.'/../unitest.module';
 
 
 
@@ -14,8 +14,26 @@ namespace {
     $result = [];
 
     //检查初始化
-    $result[] = Configger::class;
+//    $result[] = Configger::class;
 
+    $result[] = Configger::parse(__DIR__.'/test.ini');
+    $result[] = Configger::store(__DIR__.'/test2.ini',[
+        [
+         'KeyName1' => 'value1',
+         'KeyName2' => 'value2',
+         'a'  => [
+             'KeyName21' => 'value21',
+             'c' =>
+                 [
+                     'dKeyName21' => 'value21',
+                 ],
+         ],
+         'b' =>
+             [
+                 'KeyName22' => 'value22',
+             ]
+        ]
+    ]);
     //NICE
 //    $result[] = Configger::loadInner(Storage::class);
 //    $result[] = Configger::loadOuter(Storage::class);
@@ -118,9 +136,9 @@ namespace {
 //array (
 //)
     //NICE : 外部配置和内置配置合并 并且 下面的配置数组正确地写到了文件中
-    Configger::initialize([
-        'USE_LITE'          => true,
-    ]);
+//    Configger::initialize([
+//        'USE_LITE'          => true,
+//    ]);
 //    F:/home/asus/workspace/Sharingan/Sharin/Core/bundle.inc << L:851 >>
 //    [Parameter-0]
 //array (
