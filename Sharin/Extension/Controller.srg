@@ -1,24 +1,13 @@
 <?php
-/**
- * Email: linzongho@gmail.com
- * Github: https://github.com/linzongho/sharin
- * User: asus
- * Date: 8/22/16
- * Time: 11:14 AM
- */
-namespace Sharin\Core;
-use Sharin\Developer;
+namespace Sharin\Extension;
+use Sharin\Behaviour;
+use Sharin\Core\Input;
 use Sharin\Library\Response;
 use Sharin\SharinException;
 use Sharin\Utils;
 
 /**
  * Class Controller
- *
- * @property Input $input
- * @property Dao $dao
- * @property View $view
- * @property Logger $log
  *
  * @package Sharin\Core
  */
@@ -34,24 +23,26 @@ class Controller {
      * 控制器上下文环境
      * @var array
      */
-    protected static $_context = null;
+    protected $_context = null;
 
     /**
      * 获取调用类的上下文环境
      * @access private 可以保证以来它的方法获取的上下文环境是new过控制器之后的上下文环境中获取的
      * @param string|null $clsnm 类名称,不设置的情况下将自动获取
-     * @return void
+     * @return array
      * @throws SharinException
      */
-    protected static function fetchContext($clsnm=null){
+    protected static function getContext($clsnm=null){
         null === $clsnm and $clsnm = static::class;//get_called_class()
         if(preg_match('/^'.SR_APP_NAME.'(\\\.*)?\\\Controller\\\(.*)$/',$clsnm,$matches)){
-            static::$_context['m'] = ltrim(str_replace('\\','/',$matches[1]),'/');
-            static::$_context['c'] = $matches[2];
+            $context = [];
+            $context['m'] = ltrim(str_replace('\\','/',$matches[1]),'/');
+            $context['c'] = $matches[2];
+            return $context;
         }else{
             //如果出现名称空间不规范的情况，直接终止程序
             //一般会在调度器中检测不到类时抛出异常，所以这一步很难执行到
-            SharinException::throwing("控制器'{$clsnm}'不符合命名空间规范！");
+            throw new SharinException("控制器'{$clsnm}'不符合命名空间规范！");
         }
     }
 
@@ -61,8 +52,8 @@ class Controller {
      * @return $this
      */
     protected function theme($tname){
-        isset(static::$_context) or static::fetchContext();
-        static::$_context['t'] = $tname;
+        isset($this->_context) or static::getContext();
+        $this->_context['t'] = $tname;
         return $this;
     }
 
@@ -98,24 +89,25 @@ class Controller {
      * @return void
      */
     final protected function display($template = null, $cache_id = null, $compile_id = null, $parent = null){
-        null === static::$_context and static::fetchContext();
+        null === $this->_context and $this->_context = static::getContext(static::class);
         //未设置时使用调用display的函数名称
         if(null === $template){//如果未设置参数一,获取当前调用方法的名称作为模板的默认名称
-            static::$_context['a'] = SEK::backtrace(SEK::ELEMENT_FUNCTION,SEK::PLACE_FORWARD);
-            $context = static::$_context;
+            $context = $this->_context;
+            $context['a'] = SEK::backtrace(SEK::ELEMENT_FUNCTION,SEK::PLACE_FORWARD);
         }else{
             $context = SEK::parseLocation($template);
-            $context['t'] or empty(static::$_context['t']) or $context['t'] = static::$_context['t'];
-            $context['m'] or empty(static::$_context['m']) or $context['m'] = static::$_context['m'];
-            $context['c'] or empty(static::$_context['c']) or $context['c'] = static::$_context['c'];
-            $context['a'] or empty(static::$_context['a']) or $context['a'] = static::$_context['a'];
+            $context['t'] or empty($this->_context['t']) or $context['t'] = $this->_context['t'];
+            $context['m'] or empty($this->_context['m']) or $context['m'] = $this->_context['m'];
+            $context['c'] or empty($this->_context['c']) or $context['c'] = $this->_context['c'];
+            $context['a'] or empty($this->_context['a']) or $context['a'] = $this->_context['a'];
         }
         //模板变量导入
+        Behaviour::listen(ON_ASSIGN);
         View::assign($this->_tVars);
         //格式化模板变量
-        Developer::status('display_begin');
+        Behaviour::listen(ON_DISPLAY_BEGIN);
         View::display($context,$cache_id,$compile_id,$parent);
-        Developer::status('display_end');
+        Behaviour::listen(ON_DISPLAY_END);
     }
 
     /**

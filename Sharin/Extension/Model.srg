@@ -1,19 +1,11 @@
 <?php
-/**
-* Email: linzongho@gmail.com
-* Github: https://github.com/linzongho/Sharin
-* User: asus
-* Date: 8/22/16
-* Time: 11:44 AM
-*/
-namespace Sharin\Core ;
-
+namespace Sharin\Extension ;
 use Sharin\SharinException as Exception;
 use Sharin\Utils;
 
 /**
  * Class Model 模型基类
- * @package Sharin\Core
+ * @package Sharin\Extension
  */
 class Model {
 
@@ -110,7 +102,7 @@ class Model {
      * @throws Exception
      */
     public function __construct(){
-        $this->dao = Dao::getInstance();
+        $this->dao = Dao::instance();
         $this->reset([
             'table'     => $this->tablename,
         ]);

@@ -10,8 +10,7 @@ namespace hellophp {
     class A {
 
 
-        public static $name = null;
-
+        protected static $name = 'A';
 
         public static function getName(){
             if(null === static::$name){
@@ -20,16 +19,20 @@ namespace hellophp {
             return static::$name;
         }
 
+        public static function setName($name){
+            return static::$name = $name;
+        }
+
     }
 
     class B extends A{
 
-        public static $name = 'bbbb';
-
+        protected static $name = 'B';
     }
 
     class C extends A{
 
+//        protected static $name = 'C';
     }
 
 
@@ -37,5 +40,26 @@ namespace hellophp {
         A::getName(),
         B::getName(),
         C::getName(),
+
+        B::setName('BB'),
+        C::setName('CC'),
+
+        A::getName(),
+        B::getName(),
+        C::getName(),
     ]);
 }
+
+/**
+ *   注意到是否覆盖属性对结果有着不同的影响
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */

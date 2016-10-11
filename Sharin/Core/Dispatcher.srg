@@ -7,7 +7,7 @@
  * Time: 11:01 AM
  */
 namespace Sharin\Core;
-use Sharin\Core;
+use Sharin\Component;
 use Sharin\Exceptions\Dispatch\ActionAccessDenyException;
 use Sharin\Exceptions\Dispatch\ActionParameterMissingException;
 use Sharin\SharinException;
@@ -17,41 +17,36 @@ use Sharin\Exceptions\Dispatch\ModuleNotFoundException;
 use Sharin\Exceptions\MethodNotFoundException;
 
 /**
- * Class Dispatcher
- * @method string getModule()
- * @method string getController()
- * @method string getAction()
- * @method $this check(string $modules,string $ctrler,string $action) 检查并设置默认设置
- * @method mixed dispatch(string|array $modules,string $ctrler,string $action,array $params=[]) 调度到对应的action上去
+ * Class Dispatcher 调度器
  * @package Sharin\Core
  */
-class Dispatcher extends Core {
+class Dispatcher extends Component {
 
-    const CONF_NAME = 'dispatcher';
-    const CONF_CONVENTION = [
-        //空缺时默认补上,Done!
-        'INDEX_MODULE'      => 'Home',
-        'INDEX_CONTROLLER'  => 'Index',
-        'INDEX_ACTION'      => 'index',
-        //参数默认来自$_REQUESR
-        'PARAM_SOURCE'  => self::PARAM_REQUEST,
-    ];
+    const REQUEST = 0;
+    const GET     = 1;
+    const POST    = 2;
+    const PUT     = 3;
 
-    const PARAM_REQUEST = 0;
-    const PARAM_GET     = 1;
-    const PARAM_POST    = 2;
-    const PARAM_PUT     = 3;
-
+    protected static $name = 'dispatcher';
 
     /**
      * @var array
      */
     private static $_config = [];
 
-    public static function __init(){
-        self::$_config = self::getConfig();
-    }
+    public static function __initialization(array $config = null) {
+        parent::__initialization([
+            //空缺时默认补上,Done!
+            'INDEX_MODULE'      => 'Home',
+            'INDEX_CONTROLLER'  => 'Index',
+            'INDEX_ACTION'      => 'index',
+            //参数默认来自$_REQUESR
+            'PARAM_SOURCE'  => self::REQUEST,
+        ]);
 
+        self::$_config = self::convention();
+    }
+//--------------------------------------------- 通用 -------------------------------------------------------------------//
     /**
      * 执行控制器实例的对应方法
      * @param object $controllerInstance 控制器实例
@@ -75,7 +70,7 @@ class Dispatcher extends Core {
     }
 
     /**
-     * 获取传递给盖饭昂奋的参数
+     * 获取传递给控制器方法的参数
      * @param \ReflectionMethod $targetMethod
      * @return array
      * @throws SharinException
@@ -85,16 +80,16 @@ class Dispatcher extends Core {
         if($methodParams = $targetMethod->getParameters()){
             //获取默认的操作参数来源
             switch(self::$_config['PARAM_SOURCE']){
-                case self::PARAM_REQUEST:
+                case self::REQUEST:
                     $vars = $_REQUEST;
                     break;
-                case self::PARAM_GET:
+                case self::GET:
                     $vars = $_GET;
                     break;
-                case self::PARAM_POST:
+                case self::POST:
                     $vars = $_POST;
                     break;
-                case self::PARAM_PUT:
+                case self::PUT:
                     parse_str(file_get_contents('php://input'), $vars);
                     break;
                 default:
@@ -133,43 +128,23 @@ class Dispatcher extends Core {
     private static $action = '';
 
     /**
-     * 获取调度的模块
-     * @return string
-     */
-    public function _getModule(){
-        return self::$module;
-    }
-
-    /**
-     * 获取调度的控制器
-     * @return string
-     */
-    public function _getController(){
-        return self::$controller;
-    }
-
-    /**
-     * 获取调度的操作
-     * @return string
-     */
-    public function _getAction(){
-        return self::$action;
-    }
-
-    /**
      * 检查并设置默认设置
      * @param $modules
      * @param $ctrler
      * @param $action
-     * @return $this
+     * @return array
      */
-    public function _check($modules,$ctrler,$action){
+    public static function check($modules,$ctrler,$action){
         self::$module      = $modules?$modules:self::$_config['INDEX_MODULE'];
         self::$controller  = $ctrler?$ctrler:self::$_config['INDEX_CONTROLLER'];
         self::$action      = $action?$action:self::$_config['INDEX_ACTION'];
 
         self::$module and is_array(self::$module) and self::$module = implode('/',self::$module);
-        return $this;
+        return [
+            'm' => self::$module,
+            'c' => self::$controller,
+            'a' => self::$action,
+        ];
     }
 
     /**
@@ -181,7 +156,7 @@ class Dispatcher extends Core {
      * @throws MethodNotFoundException
      * @throws ModuleNotFoundException
      */
-    public function _dispatch($modules,$ctrler,$action){
+    public static function dispatch($modules,$ctrler,$action){
         $modulepath = SR_PATH_APP."/{$modules}";//linux 不识别
         strpos($modules,'/') and $modules = str_replace('/','\\',$modules);
         //模块检测
@@ -198,9 +173,8 @@ class Dispatcher extends Core {
         if(!method_exists($classInstance,$action)){
             throw new MethodNotFoundException($modules,$className,$action);
         }
-        $method = new \ReflectionMethod($classInstance, $action);
 
-        return Dispatcher::execute($classInstance,$method);
+        return Dispatcher::execute($classInstance,new \ReflectionMethod($classInstance, $action));
     }
 
 

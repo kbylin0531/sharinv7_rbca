@@ -7,7 +7,10 @@
  * Time: 1:14 PM
  */
 namespace Sharin\Core\Dao;
-
+/**
+ * Class MySQL MySQL驱动
+ * @package Sharin\Core\Dao
+ */
 class MySQL extends DaoAbstract {
 
     public function escape($field){
@@ -31,8 +34,7 @@ class MySQL extends DaoAbstract {
         }
         if(!empty($config['charset'])){
             //为兼容各版本PHP,用两种方式设置编码
-//            $this->options[\PDO::MYSQL_ATTR_INIT_COMMAND]    =   'SET NAMES '.$config['charset'];
-            $dsn  .= ';charset='.$config['charset'];
+            $dsn  .= ';charset='.$config['charset'];//$this->options[\PDO::MYSQL_ATTR_INIT_COMMAND]    =   'SET NAMES '.$config['charset'];
         }
         return $dsn;
     }

@@ -6,10 +6,11 @@
  * Date: 8/22/16
  * Time: 11:05 AM
  */
-namespace Sharin\Core;
+namespace Sharin\Extension;
 use PDO;
 use PDOException;
 use PDOStatement;
+use Sharin\Component;
 use Sharin\Core;
 use Sharin\SharinException as Exception;
 
@@ -29,64 +30,72 @@ use Sharin\SharinException as Exception;
  *
  * @package Sharin\Core
  */
-class Dao extends Core {
+class Dao extends Component {
 
-    const CONF_NAME = 'dao';
-    const CONF_CONVENTION = [
-        'DRIVER_DEFAULT_INDEX' => 0,
-        'DRIVER_CLASS_LIST' => [
-            'Sharin\\Core\\Dao\\MySQL',
-            'Sharin\\Core\\Dao\\Oci',
-            'Sharin\\Core\\Dao\\SQLServer',
-        ],
-        'DRIVER_CONFIG_LIST' => [
-            [
-                'dbname'    => 'sharin',//选择的数据库
-                'username'  => 'lin',
-                'password'  => '123456',
-                'host'      => '127.0.0.1',
-                'port'      => '3306',
-                'charset'   => 'UTF8',
-                'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
-                'options'   => [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
+    protected static $name = 'dao';
+
+    /**
+     * @var array 类配置
+     */
+    private static $config = null;
+
+    public static function __initialization(array $config = null) {
+        parent::__initialization([
+            DRIVER_CLASS_LIST   => [
+                'Sharin\\Core\\Dao\\MySQL',
+                'Sharin\\Core\\Dao\\Oci',
+                'Sharin\\Core\\Dao\\SQLServer',
+            ],
+            DRIVER_CONFIG_LIST  => [
+                [
+                    'dbname'    => 'sharin',//选择的数据库
+                    'username'  => 'lin',
+                    'password'  => '123456',
+                    'host'      => '127.0.0.1',
+                    'port'      => '3306',
+                    'charset'   => 'UTF8',
+                    'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
+                    'options'   => [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
+                    ],
+                ],
+                [
+                    'type'      => 'Oci',//数据库类型
+                    'dbname'    => 'xor',//选择的数据库
+                    'username'  => 'lin',
+                    'password'  => '123456',
+                    'host'      => '127.0.0.1',
+                    'port'      => '3306',
+                    'charset'   => 'UTF8',
+                    'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
+                    'options'   => [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
+                    ],
+                ],
+                [
+                    'type'      => 'Sqlsrv',//数据库类型
+                    'dbname'    => 'xor',//选择的数据库
+                    'username'  => 'lin',
+                    'password'  => '123456',
+                    'host'      => '127.0.0.1',
+                    'port'      => '3306',
+                    'charset'   => 'UTF8',
+                    'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
+                    'options'   => [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
+                    ],
                 ],
             ],
-            [
-                'type'      => 'Oci',//数据库类型
-                'dbname'    => 'xor',//选择的数据库
-                'username'  => 'lin',
-                'password'  => '123456',
-                'host'      => '127.0.0.1',
-                'port'      => '3306',
-                'charset'   => 'UTF8',
-                'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
-                'options'   => [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
-                ],
+            //禁止访问的PDO函数的名称
+            'forbidden'  =>[
+                'forbid','getColumnMeta'
             ],
-            [
-                'type'      => 'Sqlsrv',//数据库类型
-                'dbname'    => 'xor',//选择的数据库
-                'username'  => 'lin',
-                'password'  => '123456',
-                'host'      => '127.0.0.1',
-                'port'      => '3306',
-                'charset'   => 'UTF8',
-                'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
-                'options'   => [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
-                ],
-            ],
-        ],
-        //禁止访问的PDO函数的名称
-        'forbidden'  =>[
-            'forbid','getColumnMeta'
-        ],
-    ];
+        ]);
+        self::$config = self::convention();
+    }
 
     /**
      * 每一个Dao的驱动实现
@@ -106,17 +115,11 @@ class Dao extends Core {
     protected $error = null;
 
     /**
-     * @var array|null
-     */
-    private static $config = null;
-
-    /**
      * Dao constructor.
      * @param string|int $index
      */
-    public function __construct($index=USE_DEFAULT){
-        isset(self::$config) or self::$config = self::getConfig();
-        $this->pdo = self::driver($index);
+    public function __construct($index=null){
+        $this->pdo = self::instance($index);
     }
 
 /********************************* 基本的查询功能(发生了错误可以查询返回值是否是false,getError可以获取错误的详细信息(每次调用这些功能前都会清空之前的错误)) ***************************************************************************************/
@@ -287,8 +290,10 @@ class Dao extends Core {
      * 注意：调用此函数后会将错误信息清空
      * @return string 返回错误信息字符串，没有错误发生时返回空字符串
      */
-    public function getError(){
-        return $this->error;
+    public function error(){
+        $error = $this->error;
+        $this->error = null;
+        return $error;
     }
 
     public function getDriver(){

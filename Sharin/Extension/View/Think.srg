@@ -7,10 +7,10 @@
  * Time: 11:17 AM
  */
 
-namespace Sharin\Core\View;
+namespace Sharin\Extension\View;
 use Sharin\Core\SEK;
 use Sharin\Core\Storage;
-use Sharin\Core\View;
+use Sharin\Extension\View;
 use Sharin\Interfaces\Core\ViewInterface;
 use Sharin\SharinException;
 use Sharin\Utils;

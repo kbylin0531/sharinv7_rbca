@@ -65,7 +65,10 @@ const ON_EXCEPTION  = 'onException';
 const ON_EXCEPTION_END  = 'onExceptionEnd';
 const ON_ERROR      = 'onError';
 const ON_ERROR_END  = 'onErrorEnd';
-
+//显示
+const ON_ASSIGN         = 'onAssign';
+const ON_DISPLAY_BEGIN = 'onDisplayBegin';
+const ON_DISPLAY_END   = 'onDisplayEnd';
 
 //------------------------- 语言包 --------------------------------------//
 const LANG_ZH_CN = 'zh-cn';
