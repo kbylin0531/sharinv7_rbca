@@ -6,43 +6,42 @@
  * Date: 16-9-3
  * Time: 下午6:35
  */
-namespace Sharin\Library;
-use Sharin\C;
+namespace Sharin\Extension;
+use Sharin\Component;
 
 /**
  * Class Cookie
  * @package Sharin\Library
  */
-class Cookie {
-    use C;
+class Cookie extends Component {
 
-    const CONF_NAME = 'cookie';
-    const CONF_CONVENTION = [
-        // cookie 名称前缀
-        'prefix'    => '',
-        // cookie 保存时间
-        'expire'    => 0,
-        // cookie 保存路径
-        'path'      => '/',
-        // cookie 有效域名
-        'domain'    => '',
-        //  cookie 启用安全传输
-        'secure'    => false,
-        // httponly设置
-        'httponly'  => '',
-        // 是否使用 setcookie
-        'setcookie' => true,
-    ];
+    protected static $name = 'cookie';
+
+    public static function __initialization(array $config = null){
+        parent::__initialization( [
+            // cookie 名称前缀
+            'prefix'    => '',
+            // cookie 保存时间
+            'expire'    => 0,
+            // cookie 保存路径
+            'path'      => '/',
+            // cookie 有效域名
+            'domain'    => '',
+            //  cookie 启用安全传输
+            'secure'    => false,
+            // httponly设置
+            'httponly'  => '',
+            // 是否使用 setcookie
+            'setcookie' => true,
+        ]);
+        self::$config = self::convention();
+        empty(self::$config['httponly']) or ini_set('session.cookie_httponly', 1);
+    }
 
     /**
      * @var array
      */
     private static $config = [];
-
-    public static function __init(){
-        self::$config = self::getConfig();
-        empty(self::$config['httponly']) or ini_set('session.cookie_httponly', 1);
-    }
 
     /**
      * 判断Cookie数据
@@ -74,7 +73,7 @@ class Cookie {
      * @param string $name  cookie名称
      * @param mixed  $value cookie值
      * @param mixed  $option 可选参数 可能会是 null|integer|string
-     * @return mixed
+     * @return void
      */
     public static function set($name, $value = '', $option = null){
         // 参数设置(会覆盖黙认设置)
@@ -128,7 +127,7 @@ class Cookie {
      * Cookie删除
      * @param string $name cookie名称
      * @param string|null $prefix cookie前缀
-     * @return mixed
+     * @return void
      */
     public static function delete($name, $prefix = null){
         $prefix = isset($prefix) ? $prefix : self::$config['prefix'];
@@ -143,7 +142,7 @@ class Cookie {
     /**
      * Cookie清空
      * @param string|null $prefix cookie前缀
-     * @return mixed
+     * @return void
      */
     public static function clear($prefix = null) {
         // 清除指定前缀的所有cookie

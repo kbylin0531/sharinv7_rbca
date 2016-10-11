@@ -7,18 +7,27 @@
  */
 namespace Sharin\Library;
 
-include SR_PATH_FRAMEWORK.'/Vendor/PHPMailer/PHPMailerAutoload.php';
-class Mailer {
+use Sharin\Component;
+use PHPMailer;
 
+class Mailer extends Component {
 
+    protected static $name = 'email';
 
+    protected static $instance = null;
 
+    public static function __initialization(array $config = null)
+    {
+        parent::__initialization([
+
+        ]);
+        include SR_PATH_FRAMEWORK.'/Vendor/PHPMailer/PHPMailerAutoload.php';
+    }
 
 
     public static function test(){
 
-        require './PHPMailerAutoload.php';
-        $mail = new \PHPMailer;
+        $mail = new PHPMailer;
         //$mail->SMTPDebug = 3;                               // Enable verbose debug output
         $mail->isSMTP();                                      // Set mailer to use SMTP
         $mail->Host = 'smtp.163.com';  // Specify main and backup SMTP servers

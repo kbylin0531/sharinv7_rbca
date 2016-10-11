@@ -7,6 +7,7 @@
  */
 
 namespace Sharin\Deprecated;
+use Sharin\Library\Helper\Encode;
 use Sharin\Utils;
 
 /**
@@ -47,8 +48,8 @@ class Storage
             $fullpath = $dirpath.DIRECTORY_SEPARATOR.$filename;//子文件的完整路径
             if(file_exists($fullpath)) {
                 $index = strpos($fullpath,$_dirpath_toread);
-                $_file[Utils::toProgramEncode(substr($fullpath,$index+strlen($_dirpath_toread)))] =
-                    str_replace('\\','/',Utils::toProgramEncode($fullpath));
+                $_file[Encode::toProgramEncode(substr($fullpath,$index+strlen($_dirpath_toread)))] =
+                    str_replace('\\','/',Encode::toProgramEncode($fullpath));
             }
 
             if($recursion and is_dir($fullpath)) {

@@ -6,31 +6,30 @@
  * Time: 4:32 PM
  */
 
-namespace Sharin\Behaviours;
-use Sharin\C;
+namespace Sharin\Behaviour;
+use Sharin\Component;
 use Sharin\Core\Cache;
 use Sharin\Developer;
 use Sharin\Interfaces\BehaviourInterface;
 
 /**
- * Class StaticCacheBehaviour
+ * Class StaticCache
  * 用于静态缓存控制的行为
  * @package Sharin\Behaviours
  */
-class StaticCacheBehaviour implements BehaviourInterface{
-    use C;
+class HtmlCache extends Component  implements BehaviourInterface{
 
-    const CONF_NAME = 'behaviour/static_cache';
-    const CONF_CONVENTION = [
-        'CACHE_URL_ON'  => false,
-        'CACHE_PATH_ON' => false,
-    ];
+    protected static $name = 'static_cache';
+
+    public static function __initialization(array $config = null) {
+        parent::__initialization([
+            'CACHE_URL_ON'  => false,
+            'CACHE_PATH_ON' => false,
+        ]);
+        self::$config = self::convention();
+    }
 
     private static $config = [];
-
-    public static function __init(){
-        self::$config = self::getConfig();
-    }
 
     public function run($tag, $parameters) {}
 
@@ -53,16 +52,18 @@ class StaticCacheBehaviour implements BehaviourInterface{
         if(self::$config['CACHE_PATH_ON']){
             $pidentify = self::getPathIdentify($params);
             $content = Cache::get($pidentify,null);
-            if(null !== $content){
+            if(null === $content){
+                Developer::trace('no path cache!');
+                Cache::begin($pidentify);
+            }else{
                 Developer::trace('load path cache!');
                 exit($content);
-            }else{
-                Cache::begin($pidentify);
             }
         }
     }
 
     public function onStop($params){
+
         $actionback = $params[0];
         if(isset($actionback)){
             if (0 == $actionback) $actionback = ONE_DAY;
@@ -74,7 +75,7 @@ class StaticCacheBehaviour implements BehaviourInterface{
             }
             if(self::$config['CACHE_PATH_ON']){
                 $identify = self::getPathIdentify($params[1]);
-                Developer::trace('build path cache done!');
+                Developer::trace('build path cache done!',self::$config,$identify,$actionback);
                 exit(Cache::end($actionback,$identify));
             }
         }else{

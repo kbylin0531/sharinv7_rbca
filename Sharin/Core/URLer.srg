@@ -24,7 +24,7 @@ class URLer extends Router {
      * @param array $params GET参数数组
      * @return string
      */
-    public static function url($url=null,array $params=[]){
+    public static function build($url=null,array $params=[]){
         //解析参数中的$url
         $params or $params = [];
         $hashpos = strpos($url,'#');

@@ -29,11 +29,6 @@ class Dispatcher extends Component {
 
     protected static $name = 'dispatcher';
 
-    /**
-     * @var array
-     */
-    private static $_config = [];
-
     public static function __initialization(array $config = null) {
         parent::__initialization([
             //空缺时默认补上,Done!
@@ -43,8 +38,6 @@ class Dispatcher extends Component {
             //参数默认来自$_REQUESR
             'PARAM_SOURCE'  => self::REQUEST,
         ]);
-
-        self::$_config = self::convention();
     }
 //--------------------------------------------- 通用 -------------------------------------------------------------------//
     /**
@@ -79,7 +72,7 @@ class Dispatcher extends Component {
         $args = [];
         if($methodParams = $targetMethod->getParameters()){
             //获取默认的操作参数来源
-            switch(self::$_config['PARAM_SOURCE']){
+            switch(self::convention('PARAM_SOURCE')){
                 case self::REQUEST:
                     $vars = $_REQUEST;
                     break;
@@ -135,9 +128,9 @@ class Dispatcher extends Component {
      * @return array
      */
     public static function check($modules,$ctrler,$action){
-        self::$module      = $modules?$modules:self::$_config['INDEX_MODULE'];
-        self::$controller  = $ctrler?$ctrler:self::$_config['INDEX_CONTROLLER'];
-        self::$action      = $action?$action:self::$_config['INDEX_ACTION'];
+        self::$module      = $modules?$modules:self::convention('INDEX_MODULE');
+        self::$controller  = $ctrler?$ctrler:self::convention('INDEX_CONTROLLER');
+        self::$action      = $action?$action:self::convention('INDEX_ACTION');
 
         self::$module and is_array(self::$module) and self::$module = implode('/',self::$module);
         return [
@@ -161,7 +154,7 @@ class Dispatcher extends Component {
         strpos($modules,'/') and $modules = str_replace('/','\\',$modules);
         //模块检测
         if(!is_dir($modulepath)){
-            throw new ModuleNotFoundException($modules);
+            throw new ModuleNotFoundException($modules,$modulepath);
         }
         //控制器名称及存实性检测
         $className = SR_APP_NAME.($modules?"\\{$modules}":'')."\\Controller\\{$ctrler}";

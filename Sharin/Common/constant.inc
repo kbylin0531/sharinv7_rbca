@@ -25,9 +25,9 @@ const AJAX_JSON     = 0;
 const AJAX_XML      = 1;
 const AJAX_STRING   = 2;
 //时间常量
-const ONE_DAY   = 86400;
-const ONE_WEEK  = 604800;
-const ONE_MONTH = 2592000;
+const ONE_DAY       = 86400;
+const ONE_WEEK      = 604800;
+const ONE_MONTH     = 2592000;
 //数据库操作类型
 const ACTION_SELECT = 0;//查询操作,将使用到$_fields和$_where字段
 const ACTION_CREATE = 1;//添加操作,将使用到$_fields字段
@@ -38,9 +38,10 @@ const DS = DIRECTORY_SEPARATOR;
 
 const SR_IS_CLI = PHP_SAPI === 'cli';
 define('SR_IS_WIN',false !== stripos(PHP_OS, 'WIN'));//const IS_WINDOWS = PHP_OS === 'WINNT';
-defined('SR_DEBUG_MODE_ON') or define('SR_DEBUG_MODE_ON', true);
-const SR_OS_ENCODING = 'UTF-8';//系统编码
+defined('SR_DEBUG_MODE_ON') or define('SR_DEBUG_MODE_ON', true);//可以提高响应速度
+defined('SR_OS_ENCODING') or define('SR_OS_ENCODING','UTF-8');//系统编码
 
+//目录常量
 define('SR_PATH_BASE', dirname(dirname(__DIR__)));
 const SR_PATH_FRAMEWORK = SR_PATH_BASE.'/Sharin';
 const SR_PATH_CONFIG    = SR_PATH_BASE.'/Config';//global config
