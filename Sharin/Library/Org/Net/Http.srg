@@ -73,8 +73,6 @@ class Http {
             'block'		=>	TRUE,
             );
 
-//        foreach (array_merge($conf_arr, $conf) as $k=>$v) ${$k} = $v;
-
         $conf = array_merge($conf_arr,$conf);
         $limit  = $conf['limit'];
         $post   = $conf['post'];
@@ -93,7 +91,7 @@ class Http {
             //$out .= "Referer: $boardurl\r\n";
             $out .= "Accept-Language: zh-cn\r\n";
             $out .= "Content-Type: application/x-www-form-urlencoded\r\n";
-            $out .= "User-Agent: $_SERVER[HTTP_USER_AGENT]\r\n";
+            $out .= "User-Agent: {$_SERVER['HTTP_USER_AGENT']}\r\n";
             $out .= "Host: $host\r\n";
             $out .= 'Content-Length: '.strlen($post)."\r\n";
             $out .= "Connection: Close\r\n";
@@ -105,7 +103,7 @@ class Http {
             $out .= "Accept: */*\r\n";
             //$out .= "Referer: $boardurl\r\n";
             $out .= "Accept-Language: zh-cn\r\n";
-            $out .= "User-Agent: $_SERVER[HTTP_USER_AGENT]\r\n";
+            $out .= "User-Agent: {$_SERVER['HTTP_USER_AGENT']}\r\n";
             $out .= "Host: $host\r\n";
             $out .= "Connection: Close\r\n";
             $out .= "Cookie: $cookie\r\n\r\n";

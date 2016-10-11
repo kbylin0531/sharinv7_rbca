@@ -8,7 +8,6 @@
  */
 
 namespace Sharin\Core\Cache;
-use Sharin\Interfaces\Core\CacheInterface;
 use Sharin\Core\Storage;
 use Sharin\SharinException;
 

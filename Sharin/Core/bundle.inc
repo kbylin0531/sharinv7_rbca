@@ -5,6 +5,8 @@
 namespace Sharin {
     use Sharin\Core\Logger;
     use Sharin\Core\Storage;
+    use Sharin\Exceptions\ConfigParseFailedException;
+    use Sharin\Library\Helper\Ini;
     use Sharin\Library\Helper\XMLer;
     use Throwable;
     use Exception;
@@ -23,7 +25,6 @@ namespace Sharin {
          * 数据签名认证
          * @param  array  $data 被认证的数据
          * @return string       签名
-         * @author 麦当苗儿 <zuojiazi@vip.qq.com>
          */
         public static function dataSign(array $data) {
             ksort($data);
@@ -54,40 +55,6 @@ namespace Sharin {
         public static function styleStr(string $str,bool $orien=true){
             return $orien? ucfirst(preg_replace_callback('/_([a-zA-Z])/',function($match){return strtoupper($match[1]);},$str)):
                 strtolower(ltrim(preg_replace('/[A-Z]/', '_\\0', $str), '_'));
-        }
-
-        /**
-         * 自动从运行环境中获取URI
-         * 直接访问：
-         *  http://www.xor.com:8056/                => '/'
-         *  http://localhost:8056/_xor/             => '/_xor/'  ****** BUG *******
-         * @param bool $reget 是否重新获取，默认为false
-         * @return null|string
-         */
-        public static function pathInfo($reget=false){
-            static $uri = '/';
-            if($reget or '/' === $uri){
-                if(isset($_SERVER['PATH_INFO'])){
-                    //如果设置了PATH_INFO则直接获取之
-                    $uri = $_SERVER['PATH_INFO'];
-                }else{
-                    $scriptlen = strlen($_SERVER['SCRIPT_NAME']);
-                    if(strlen($_SERVER['REQUEST_URI']) > $scriptlen){
-                        $pos = strpos($_SERVER['REQUEST_URI'],$_SERVER['SCRIPT_NAME']);
-                        if(false !== $pos){
-                            //在不支持PATH_INFO...或者PATH_INFO不存在的情况下(URL省略将被认定为普通模式)
-                            //REQUEST_URI获取原生的URL地址进行解析(返回脚本名称后面的部分)
-                            if(0 === $pos){//PATHINFO模式
-                                $uri = substr($_SERVER['REQUEST_URI'], $scriptlen);
-                            }else{
-                                //重写模式
-                                $uri = $_SERVER['REQUEST_URI'];
-                            }
-                        }
-                    }else{}//URI短于SCRIPT_NAME，则PATH_INFO等于'/'
-                }
-            }
-            return $uri;
         }
 
         /**
@@ -786,20 +753,6 @@ namespace Sharin {
 
 //------------------------------------ 通用工具 -------------------------------------------------------------------------------------
 
-        private static function array2Ini(array $data,string $parent=''){
-            $str = '';
-            foreach ($data as $key=>$value){
-                $key = $parent?"{$parent}.{$key}":$key;
-                if(is_array($value)){
-                    $str .= self::array2Ini($value,$key);
-                }else{
-                    $str .= "{$key} = {$value}\r\n";
-                }
-            }
-            return $str;
-        }
-
-
         public static function store(string $path,array $data,string $type=''){
             $type or $type = pathinfo($path, PATHINFO_EXTENSION);
             switch ($type) {
@@ -807,9 +760,7 @@ namespace Sharin {
                     return Storage::write($path,'<?php return '.var_export($data,true).';');
                     break;
                 case self::TYPE_INI:
-                    $data = self::array2Ini($data);
-                    dumpout($data);
-                    return Storage::write($path,$data);
+                    return Storage::write($path,Ini::create($data));
                     break;
                 case self::TYPE_YAML:
                     return yaml_emit_file($path,$data,YAML_UTF8_ENCODING);
@@ -829,38 +780,11 @@ namespace Sharin {
 
         /**
          * 解析配置文件爱呢
-         *
-         *
-         * INI文件解析可以解析多维数组(方括号内的将被忽略)
-         *  [Section1 Name]
-         *  KeyName1=value1
-         *  KeyName2=value2
-         *  [Section2 Name]
-         *  a.KeyName21=value21
-         *  b.KeyName22=value22
-         *  [Section3 Name]
-         *  a.c.dKeyName21=value21
-         * 的结果是：
-         * [
-         *     [
-         *         'KeyName1' => 'value1',
-         *         'KeyName2' => 'value2',
-         *         'a'  => [
-         *            'KeyName21' => 'value21',
-         *            'c' => [
-         *                    'dKeyName21' => 'value21',
-         *                ],
-         *         ],
-         *         'b' => [
-         *                  'KeyName22' => 'value22',
-         *              ]
-         *     ]
-         * ]
-         *
          * @param string $path 配置文件的路径
          * @param string|null $type 配置文件的类型,参数为null时根据文件名称后缀自动获取
          * @param callable $parser 配置解析方法 有些格式需要用户自己解析
          * @return array
+         * @throws ConfigParseFailedException
          */
         public static function parse(string $path,string $type='',callable $parser=null){
             if(!is_readable($path)) return [];//文件不存在或者不可以读取
@@ -869,28 +793,8 @@ namespace Sharin {
                 case self::TYPE_PHP:
                     $result = include $path;
                     break;
-                case self::TYPE_INI: // [OK]
-                    $temp = parse_ini_file($path);
-                    $result = [];
-                    if($temp) foreach ($temp as $name=>$value) {
-                        if(strpos($name,'.')){
-                            $name = explode('.',$name);
-                            $lastindex = count($name) - 1;
-                            $target = &$result;
-                            foreach ($name as $i => $nm) {
-                                if($i === $lastindex){
-                                    //还没到最后一个
-                                    $target[$nm] = $value;
-                                    break;
-                                }else{
-                                    isset($target[$nm]) or $target[$nm] = [];
-                                    $target = &$target[$nm];
-                                }
-                            }
-                        }else{
-                            $result[$name] = $value;
-                        }
-                    }
+                case self::TYPE_INI:
+                    return Ini::parse($path);
                     break;
                 case self::TYPE_YAML:
                     $result = yaml_parse_file($path);
@@ -906,7 +810,11 @@ namespace Sharin {
                     $result = unserialize($content);
                     break;
                 default:
-                    $result = $parser?$parser($path):SharinException::throwing('无法解析配置文件');
+                    if($parser){
+                        $result = $parser($path);
+                    }else{
+                        throw new ConfigParseFailedException($path,$type,$parser);
+                    }
             }
             return is_array($result)? $result : [];
         }
