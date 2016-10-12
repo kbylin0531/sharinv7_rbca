@@ -1,7 +1,7 @@
 <?php
 namespace Sharin\Core;
 use Sharin\Behaviour;
-use Sharin\Utils;
+use Sharin;
 use Sharin\Developer;
 
 /**
@@ -34,9 +34,9 @@ class ExceptionHandler {
         ];
 
         if(SR_DEBUG_MODE_ON){
-            Utils::template('error',$vars);
+            Sharin::template('error',$vars);
         }else{
-            Utils::template('user_error');
+            Sharin::template('user_error');
         }
         Behaviour::listen(ON_ERROR_END);
         return true;
@@ -65,12 +65,12 @@ class ExceptionHandler {
             ];
             if(SR_DEBUG_MODE_ON){
                 Developer::trace($vars);//页面跟踪错误
-                Utils::template('exception',$vars);
+                Sharin::template('exception',$vars);
             }else{
-                Utils::template('user_error');
+                Sharin::template('user_error');
             }
         }else{
-            Utils::template('user_error');
+            Sharin::template('user_error');
         }
         Behaviour::listen(ON_EXCEPTION_END);
     }

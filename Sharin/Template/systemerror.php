@@ -5,6 +5,6 @@
     <title>ERROR</title>
 </head>
 <body>
-System Error!
+Error: <?php echo isset($error)? $error : 'no detail'; ?>
 </body>
 </html>

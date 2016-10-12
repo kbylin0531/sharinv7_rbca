@@ -13,8 +13,8 @@ class View extends Component {
 
     protected static $name = 'view';
 
-    public static function __initialization(array $config = null){
-        parent::__initialization([
+    public static function initializationize(array $config = null){
+        parent::initializationize([
             DRIVER_CLASS_LIST   => [
                 'Sharin\\Extension\\View\\Think',
                 'Sharin\\Extension\\View\\Smarty',

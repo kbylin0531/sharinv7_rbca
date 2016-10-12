@@ -5,10 +5,10 @@ use Sharin\Core\Dispatcher;
 use Sharin\Core\Router;
 use Sharin\Developer;
 use Sharin\Configger;
+use Sharin\Core\Response;
 use Sharin\Core\ExceptionHandler;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Exceptions\RouteParseFailedException;
-use Sharin\SharinException as SE;
 use Sharin\Behaviour\HtmlCache as HC;
 //获取开始运行时状态
 $GLOBALS['web_begin'] = [
@@ -17,7 +17,7 @@ $GLOBALS['web_begin'] = [
 ];
 
 //---------------------------------------- 通用常量定义 ---------------------------------------------//
-include __DIR__.'/Common/constant.inc';
+require __DIR__.'/Common/constant.inc';
 if(SR_IS_CLI) die('only run in web mode');
 //-------------------------- WEB模式常量定义 --------------------------------------------------//
 define('SR_NOW_MICRO',  $_SERVER['REQUEST_TIME_FLOAT']);//(int)($_SERVER['REQUEST_TIME_FLOAT']*1000)//isset($_SERVER['REQUEST_TIME_FLOAT'])? $_SERVER['REQUEST_TIME_FLOAT']:microtime(true)
@@ -48,13 +48,12 @@ if(SR_DEBUG_MODE_ON) {
     ini_set('display_errors', 0);
 }
 
-
 /**
  * Class Sharin
  */
 final class Sharin {
     /**
-     * @var array 常规设置
+     * @var array 常规设置(系统内置的类的惯例配置在此配置)
      */
     private static $convention = [
         'APP_NAME'          => 'Web',//App dir name
@@ -118,8 +117,8 @@ final class Sharin {
 
         //行为注册
         ClassLoader::register();
-        set_error_handler([SE::class,'handleError'],E_ALL);
-        set_exception_handler([SE::class,'handleException']);
+        set_error_handler([self::class,'handleError'],E_ALL);
+        set_exception_handler([self::class,'handleException']);
         register_shutdown_function(function (){/* 脚本结束时缓存区域的内容将会自动输出，所以不能把输出控制语句放到这里 */
             //行为监听
             Behaviour::listen(ON_SHUTDOWN);
@@ -136,8 +135,6 @@ final class Sharin {
      * @throws RouteParseFailedException
      */
     public static function start(){
-        ob_end_clean();
-        ob_start();
         //执行服务端程序
         Behaviour::listen(ON_START);
         //可以执行一些安全性检查
@@ -158,7 +155,6 @@ final class Sharin {
         define('SR_REQUEST_CONTROLLER', $check_result['c']);//请求的控制器
         define('SR_REQUEST_ACTION',     $check_result['a']);//请求的操作
 
-
         Behaviour::listen(ON_DISPATCH,[SR_REQUEST_MODULE,SR_REQUEST_CONTROLLER,SR_REQUEST_ACTION]);
         $actionback = Dispatcher::dispatch(SR_REQUEST_MODULE,SR_REQUEST_CONTROLLER,SR_REQUEST_ACTION);
         //exec的结果将用于判断输出缓存，如果为int，表示缓存时间，0表示无限缓存XXX,将来将创造更多的扩展，目前仅限于int
@@ -167,6 +163,23 @@ final class Sharin {
     }
 
 
+    /**
+     * 加载显示模板
+     * @param string $tpl template name in folder 'Tpl'
+     * @param array|null $vars vars array to extract
+     * @param bool $clean it will clean the output cache if set to true
+     * @param bool $isfile 判断是否是模板文件
+     */
+    public static function template(string $tpl,array $vars=null,bool $clean=false,bool $isfile=false) {
+        $clean and Response::cleanOutput();
+        $isfile or $tpl = SR_PATH_FRAMEWORK."/Template/{$tpl}.php";
+        if(!is_file($tpl)){
+            $vars['error'] = "'{$tpl}' not found";
+            $tpl = SR_PATH_FRAMEWORK.'/Template/systemerror.php';
+        }
+        $vars and extract($vars, EXTR_OVERWRITE);
+        require $tpl;
+    }
 
     /**
      * 处理错误信息

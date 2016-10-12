@@ -7,7 +7,6 @@
  */
 
 namespace Sharin\Core\Storage;
-use Sharin\Interfaces\Core\StorageInterface;
 
 //* SAE Storage系统的使用
 //    echo '<pre>';

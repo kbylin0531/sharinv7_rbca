@@ -5,7 +5,7 @@
  * Date: 9/5/16
  * Time: 3:48 PM
  */
-namespace Sharin\Interfaces\Core;
+namespace Sharin\Core\Storage;
 
 /**
  * Interface StorageInterface

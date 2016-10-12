@@ -10,7 +10,7 @@ namespace Sharin\Behaviour;
 use Sharin\Component;
 use Sharin\Core\Cache;
 use Sharin\Developer;
-use Sharin\Interfaces\BehaviourInterface;
+use Sharin\BehaviourInterface;
 
 /**
  * Class StaticCache
@@ -21,8 +21,8 @@ class HtmlCache extends Component  implements BehaviourInterface{
 
     protected static $name = 'static_cache';
 
-    public static function __initialization(array $config = null) {
-        parent::__initialization([
+    public static function initializationize(array $config = null) {
+        parent::initializationize([
             'CACHE_URL_ON'  => false,
             'CACHE_PATH_ON' => false,
         ]);

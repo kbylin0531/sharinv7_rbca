@@ -23,8 +23,8 @@ class Session extends Component {
 
     protected static $name = 'session';
 
-    public static function __initialization(array $config = null) {
-        parent::__initialization( [
+    public static function initializationize(array $config = null) {
+        parent::initializationize( [
             'CACHE_EXPIRE'  => 180,//默认session到期时间
             'SESSION_NAME'  => '_shf_',//会话名称
             'SAVEPATH'      => null,//null表示不进行额外的设置，也可以是一个带权限的目录

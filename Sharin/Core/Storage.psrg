@@ -39,8 +39,8 @@ class Storage extends Component {
      */
     private static $_config = [];
 
-    public static function __initialization(array $config = null){
-        parent::__initialization([
+    public static function initializationize(array $config = null){
+        parent::initializationize([
             'READ_LIMIT_ON'     => true,
             'WRITE_LIMIT_ON'    => true,
 
@@ -190,6 +190,7 @@ class Storage extends Component {
             $limit =  self::$_config['WRITE_LIMIT_ON'];
         }
         if(!$limit or !$scopes) return true;//未限制或者限制区域为空
+
 
         //目录处理(路径处理，程序编码转化为系统编码) TODO:需要在windows中文版本(系统编码是GB2312)中测试编码转换问题
         $path = Encode::toSystemEncode($path);

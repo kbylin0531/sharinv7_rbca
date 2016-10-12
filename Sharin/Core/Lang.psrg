@@ -52,8 +52,8 @@ class Lang extends Component {
 
     protected static $outer_upd_time = null;
 
-    public static function __initialization(array $config = null){
-        parent::__initialization([
+    public static function initializationize(array $config = null){
+        parent::initializationize([
             //语言包列表
             'LANG_LIST'     => [
                 'en-us',

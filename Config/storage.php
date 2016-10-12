@@ -8,8 +8,8 @@
 return [
     'WRITABLE_SCOPE' =>
         array (
-            0 => '/home/asus/workspace/Sharingan/Runtime',
-            1 => '/home/asus/workspace/Sharingan/Public/rt/',
+            0 => SR_PATH_BASE.'/Runtime',
+            1 => SR_PATH_BASE.'/Public/rt/',
         ),
 
 ];

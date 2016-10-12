@@ -19,8 +19,8 @@ use Sharin\Component;
  */
 class ComponentTest extends Component {
 
-    public static function __initialization(array $config = null){
-        parent::__initialization([
+    public static function initializationize(array $config = null){
+        parent::initializationize([
             'BASE_ON_DRIVER'        => true,
             'BASED_DRIVER_INDEX'    => '0',
 

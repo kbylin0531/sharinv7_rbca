@@ -14,8 +14,8 @@ class Router extends Component {
 
     protected static $name = 'route';
 
-    public static function __initialization(array $config = null) {
-        parent::__initialization([
+    public static function initializationize(array $config = null) {
+        parent::initializationize([
             //------------------------
             //For URL route
             //------------------------

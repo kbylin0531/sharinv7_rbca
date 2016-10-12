@@ -39,8 +39,8 @@ class Dao extends Component {
      */
     private static $config = null;
 
-    public static function __initialization(array $config = null) {
-        parent::__initialization([
+    public static function initializationize(array $config = null) {
+        parent::initializationize([
             DRIVER_CLASS_LIST   => [
                 'Sharin\\Core\\Dao\\MySQL',
                 'Sharin\\Core\\Dao\\Oci',

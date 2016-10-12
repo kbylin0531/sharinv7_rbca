@@ -29,8 +29,8 @@ class Dispatcher extends Component {
 
     protected static $name = 'dispatcher';
 
-    public static function __initialization(array $config = null) {
-        parent::__initialization([
+    public static function initializationize(array $config = null) {
+        parent::initializationize([
             //空缺时默认补上,Done!
             'INDEX_MODULE'      => 'Home',
             'INDEX_CONTROLLER'  => 'Index',

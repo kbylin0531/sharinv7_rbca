@@ -7,9 +7,8 @@
  * Time: 11:33 AM
  */
 
-namespace Sharin\Core\View;
+namespace Sharin\Extension\View;
 use Sharin\Developer;
-use Sharin\Interfaces\Core\ViewInterface;
 use Sharin\SharinException as Exception;
 
 class Smarty implements ViewInterface {

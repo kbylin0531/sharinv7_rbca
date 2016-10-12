@@ -6,7 +6,7 @@
  * Time: 上午10:20
  */
 
-namespace Sharin\Interfaces\Core;
+namespace Sharin\Extension\View;
 
 
 interface ViewInterface {

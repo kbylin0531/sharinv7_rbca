@@ -17,8 +17,8 @@ class Cookie extends Component {
 
     protected static $name = 'cookie';
 
-    public static function __initialization(array $config = null){
-        parent::__initialization( [
+    public static function initializationize(array $config = null){
+        parent::initializationize( [
             // cookie 名称前缀
             'prefix'    => '',
             // cookie 保存时间

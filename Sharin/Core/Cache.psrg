@@ -27,8 +27,8 @@ class Cache extends Component {
      */
     private static $idStack = [];
 
-    public static function __initialization(array $config = null){
-        parent::__initialization([
+    public static function initializationize(array $config = null){
+        parent::initializationize([
             DRIVER_CLASS_LIST => [
                 'Sharin\\Core\\Cache\\Memcache',
             ],
@@ -65,7 +65,7 @@ class Cache extends Component {
         }
 
         //检查是否可用
-        if(!Storage::has($path,Storage::READ_ACCESS | Storage::WRITE_ACCESS)){
+        if(!Storage::has($path,Storage::READ_ACCESS | Storage::WRITE_ACCESS) and !Storage::mkdir($path,0700)){
             throw new SharinException("缓存目录'{$path}'不可读或不可写");
         };
     }

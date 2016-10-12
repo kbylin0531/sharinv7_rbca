@@ -40,8 +40,8 @@ class Logger extends Component {
 
     private static $config = [];
 
-    public static function __initialization(array $config = null){
-        parent::__initialization([
+    public static function initializationize(array $config = null){
+        parent::initializationize([
             'RATE'      => Logger::LOGRATE_DAY,
             //Think\Log
             'TIME_FORMAT'   =>  ' c ',

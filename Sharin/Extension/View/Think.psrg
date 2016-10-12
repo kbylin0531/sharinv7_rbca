@@ -11,9 +11,8 @@ namespace Sharin\Extension\View;
 use Sharin\Core\SEK;
 use Sharin\Core\Storage;
 use Sharin\Extension\View;
-use Sharin\Interfaces\Core\ViewInterface;
 use Sharin\SharinException;
-use Sharin\Utils;
+use Sharin;
 
 class Think implements ViewInterface {
     /**
@@ -239,7 +238,7 @@ class Think implements ViewInterface {
     public function fetch($templateFile,$templateVar,$prefix='') {
         $this->tVar =   $templateVar;
         $cachefile  =   $this->template($templateFile,$prefix);
-        Utils::template($cachefile,$this->tVar);
+        Sharin::template($cachefile,$this->tVar,false,true);
     }
 
     /**
@@ -269,7 +268,6 @@ class Think implements ViewInterface {
                 }
             }
         }
-
 
         if(is_file($templateFile)) {
             $this->templateFile    =  $templateFile;
@@ -774,7 +772,6 @@ class Think implements ViewInterface {
         $parseStr   =   '';
         foreach ($array as $templateName){
             if(empty($templateName)) continue;
-//            \Sharin\dumpout($templateName,$this->template);
             if(false === strpos($templateName,$this->config['TEMPLATE_SUFFIX'])) {
                 // 解析规则为 模块@主题/控制器/操作 $templateName   =   T($templateName);
                 //现在解析规则改为 PATH_BASE.'Application'.'#相对于Application目录的位置#';

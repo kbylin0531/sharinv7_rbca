@@ -4,7 +4,7 @@ use Sharin\Behaviour;
 use Sharin\Core\Response;
 use Sharin\Core\URLer;
 use Sharin\SharinException;
-use Sharin\Utils;
+use Sharin;
 use Sharin\Core\SEK;
 /**
  * Class Controller
@@ -147,7 +147,7 @@ class Controller {
             'javascript:history.back(-1);':
             'javascript:window.close();';
 
-        Utils::template('jump',$vars);
+        Sharin::template('jump',$vars);
     }
 
     /**
