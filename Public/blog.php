@@ -8,7 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-
+require __DIR__.'/../Sharin/web.module';
 // 应用入口文件
 // 检测是否是新安装
 if(file_exists("./Public/install") && !file_exists("./Public/install/install.lock")){
