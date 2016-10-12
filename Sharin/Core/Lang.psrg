@@ -64,7 +64,7 @@ class Lang extends Component {
             'DEFAULT_LANG'  => LANG_ZH_CN,        //默认的语言类型
 
             //语言包路径
-            'PATH_INNER'    => SR_PATH_FRAMEWORK.'/Lang',//预定义语言包
+            'PATH_INNER'    => SR_PATH_FRAMEWORK.'/I18n',//预定义语言包
             'PATH_OUTER'    => SR_PATH_BASE.'/Lang',    //用户定义语言包路径
             //语言包缓存路径
             'PATH_CACHE'    => SR_PATH_DATA.'/Lang',//语言包缓存路径
