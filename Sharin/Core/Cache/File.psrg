@@ -10,7 +10,7 @@
 namespace Sharin\Core\Cache;
 use Sharin\Core\Storage;
 use Sharin\Developer;
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * 文件类型缓存类

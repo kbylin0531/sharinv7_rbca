@@ -9,9 +9,9 @@
 namespace Sharin\Exceptions\IO;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class FileNotFoundException extends SharinException
+class FileNotFoundException extends Exception
 {
 
 }

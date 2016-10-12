@@ -10,7 +10,7 @@ namespace Sharin\Core;
 use Sharin\Component;
 use Sharin\Exceptions\Dispatch\ActionAccessDenyException;
 use Sharin\Exceptions\Dispatch\ActionParameterMissingException;
-use Sharin\SharinException;
+use Sharin\Exception;
 use ReflectionMethod;
 use Sharin\Exceptions\Dispatch\ControllerNotFoundException;
 use Sharin\Exceptions\Dispatch\ModuleNotFoundException;
@@ -66,7 +66,7 @@ class Dispatcher extends Component {
      * 获取传递给控制器方法的参数
      * @param \ReflectionMethod $targetMethod
      * @return array
-     * @throws SharinException
+     * @throws Exception
      */
     public static function fetchArguments(\ReflectionMethod $targetMethod){
         $args = [];

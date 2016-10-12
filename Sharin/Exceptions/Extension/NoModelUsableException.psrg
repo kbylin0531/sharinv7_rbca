@@ -7,8 +7,8 @@
  */
 
 namespace Sharin\Exceptions\Extension;
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class NoModelUsableException extends SharinException {
+class NoModelUsableException extends Exception {
 
 }

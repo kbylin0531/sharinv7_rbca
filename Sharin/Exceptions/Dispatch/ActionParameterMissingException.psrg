@@ -7,9 +7,9 @@
  */
 
 namespace Sharin\Exceptions\Dispatch;
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class ActionParameterMissingException extends SharinException{
+class ActionParameterMissingException extends Exception{
 
 
 

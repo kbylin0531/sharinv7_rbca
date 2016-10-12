@@ -9,9 +9,9 @@
 namespace Sharin\Exceptions;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class ConfigParseFailedException extends SharinException
+class ConfigParseFailedException extends Exception
 {
 
 }

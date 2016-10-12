@@ -126,7 +126,7 @@ class Verify extends Component {
         $code = array(); // 验证码
         $codeNX = 0; // 验证码第N个字符的左边距
         if(!function_exists('imagettftext')){
-            SharinException::throwing('未安装GD库或者freetype库！');
+            Exception::throwing('未安装GD库或者freetype库！');
         }
         if(self::$config['useZh']){ // 中文验证码
             for ($i = 0; $i<self::$config['length']; $i++) {

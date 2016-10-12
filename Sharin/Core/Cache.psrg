@@ -9,7 +9,7 @@
 namespace Sharin\Core;
 use Sharin\Component;
 use Sharin\Developer;
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * Class Cache 缓存控制类
@@ -66,7 +66,7 @@ class Cache extends Component {
 
         //检查是否可用
         if(!Storage::has($path,Storage::READ_ACCESS | Storage::WRITE_ACCESS) and !Storage::mkdir($path,0700)){
-            throw new SharinException("缓存目录'{$path}'不可读或不可写");
+            throw new Exception("缓存目录'{$path}'不可读或不可写");
         };
     }
 
@@ -139,7 +139,7 @@ class Cache extends Component {
         }
         $filename = self::$options['path'] . $name . '.cache';
         $dir = dirname($filename);
-        Storage::mkdir($dir) or SharinException::throwing("Failed to mkdir '{$dir}'");
+        Storage::mkdir($dir) or Exception::throwing("Failed to mkdir '{$dir}'");
         return $filename;
     }
 

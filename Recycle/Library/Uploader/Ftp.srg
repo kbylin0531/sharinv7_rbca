@@ -64,7 +64,7 @@ class Ftp extends Locale {
 
         /* 登录FTP服务器 */
         if(!$this->login()){
-            SharinException::throwing($this->error);
+            Exception::throwing($this->error);
         }
     }
 

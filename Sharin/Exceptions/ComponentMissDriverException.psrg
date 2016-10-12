@@ -9,8 +9,8 @@
 namespace Sharin\Exceptions;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class ComponentMissDriverException extends SharinException {
+class ComponentMissDriverException extends Exception {
 
 }

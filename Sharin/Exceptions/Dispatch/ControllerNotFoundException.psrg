@@ -10,9 +10,9 @@
 namespace Sharin\Exceptions\Dispatch;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class ControllerNotFoundException extends SharinException
+class ControllerNotFoundException extends Exception
 {
 
 }

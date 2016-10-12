@@ -12,7 +12,7 @@ use PDOException;
 use PDOStatement;
 use Sharin\Component;
 use Sharin\Core;
-use Sharin\SharinException as Exception;
+use Sharin\Exception as Exception;
 
 /**
  * Class Dao

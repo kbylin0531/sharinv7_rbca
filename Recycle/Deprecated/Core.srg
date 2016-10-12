@@ -8,7 +8,7 @@
 
 namespace Sharin\Deprecated;
 use Sharin\Exceptions\MethodNotFoundException;
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * Class Core
@@ -52,8 +52,8 @@ abstract class Core {
      * @param mixed $identify
      * @return object
      */
-    public static function instance( $identify=USE_DEFAULT){
-        if($identify === USE_DEFAULT and isset(self::$_current_using[static::class])){
+    public static function instance( $identify=null){
+        if($identify === null and isset(self::$_current_using[static::class])){
             $identify = self::$_current_using[static::class];
         }
         $instance = self::getInstance(null,null,$identify);
@@ -65,20 +65,20 @@ abstract class Core {
      * it maybe a waste of performance
      * @param mixed $identify it will get the default index if set to null
      * @return object
-     * @throws SharinException
+     * @throws Exception
      */
-    public static function driver( $identify=USE_DEFAULT){
+    public static function driver( $identify=null){
         $clsnm = static::class;
         isset(self::$_drivers[$clsnm]) or self::$_drivers[$clsnm] = [];
         $config = null;
 
         //get default identify
-        if(USE_DEFAULT === $identify) {
+        if(null === $identify) {
             $config = static::getConfig();
             if(isset($config[DRIVER_DEFAULT_INDEX])){
                 $identify = $config[DRIVER_DEFAULT_INDEX];
             }else{
-                return USE_DEFAULT;
+                return null;
             }
         }
 
@@ -90,7 +90,7 @@ abstract class Core {
                 $driver_class = $config[DRIVER_CLASS_LIST][$identify];
                 self::$_drivers[$clsnm][$identify] = self::getInstance($driver_conf,$driver_class,$identify);
             }else{
-                throw new SharinException("无法创建类'{$clsnm}'关于'{$identify}'的驱动！");
+                throw new Exception("无法创建类'{$clsnm}'关于'{$identify}'的驱动！");
             }
         }
         return self::$_drivers[$clsnm][$identify];
@@ -119,12 +119,12 @@ abstract class Core {
      * @param string $method method name
      * @param array $arguments method arguments
      * @return mixed
-     * @throws SharinException
+     * @throws Exception
      */
     public function __call(string $method,array $arguments) {
         $clsnm = static::class;
         if(!isset($this->_driver)){
-            throw new SharinException($clsnm);
+            throw new Exception($clsnm);
         }
         if(!method_exists($this->_driver,$method)) throw new MethodNotFoundException($clsnm,$method);
         return call_user_func_array([$this->_driver, $method], $arguments);
@@ -135,12 +135,12 @@ abstract class Core {
      * @param string $method method name
      * @param array $arguments method arguments
      * @return mixed
-     * @throws SharinException
+     * @throws Exception
      */
     public static function __callStatic(string $method,array $arguments) {
         $driver = static::driver();
         $clsnm = static::class;
-        if(USE_DEFAULT === $driver){
+        if(null === $driver){
             $callable = "{$clsnm}::_{$method}";
         }else{
             $callable = [$driver, $method];

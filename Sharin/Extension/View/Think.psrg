@@ -11,7 +11,7 @@ namespace Sharin\Extension\View;
 use Sharin\Core\SEK;
 use Sharin\Core\Storage;
 use Sharin\Extension\View;
-use Sharin\SharinException;
+use Sharin\Exception;
 use Sharin;
 
 class Think implements ViewInterface {
@@ -175,7 +175,7 @@ class Think implements ViewInterface {
         $this->_replacement['__CONTROLLER__'] = __CONTROLLER__;
         $this->_replacement['__ACTION__'] = __ACTION__;// 当前操作地址
 
-        $template or SharinException::throwing('No template!');
+        $template or Exception::throwing('No template!');
 
         //如果原先的后缀名是.php 则这里的操作可以避免修改，如果是标准的框架内的方式如$this->display('index')
         //或者$this->display(/* 方法名称自动获取 */)，则一定会进入到else中并连接上预定义的后缀名
@@ -361,7 +361,7 @@ class Think implements ViewInterface {
         }
         // PHP语法检查
         if($this->config['DENY_PHP'] && false !== strpos($content,'<?php')) {
-            SharinException::throwing('denyed using raw php in template!');
+            Exception::throwing('denyed using raw php in template!');
         }
         return $content;
     }
@@ -422,7 +422,7 @@ class Think implements ViewInterface {
     private function parseXmlAttrs($attrs) {
         $xml        =   '<tpl><tag '.$attrs.' /></tpl>';
         $xml        =   simplexml_load_string($xml);
-        if(!$xml)  return SharinException::throwing('_XML_TAG_ERROR_:'.$attrs);
+        if(!$xml)  return Exception::throwing('_XML_TAG_ERROR_:'.$attrs);
         $xml        =   (array)($xml->tag->attributes());
         $array      =   array_change_key_case($xml['@attributes']);
         return $array;
@@ -788,7 +788,7 @@ class Think implements ViewInterface {
                 // 获取模板文件内容
                 $parseStr .= file_get_contents($templateName);
             }else{
-                SharinException::throwing($templateName,'not found!');
+                Exception::throwing($templateName,'not found!');
             }
         }
         return $parseStr;
@@ -831,7 +831,7 @@ class Think implements ViewInterface {
         $attr   =   str_replace('&','___', $attr);
         $xml    =   '<tpl><tag '.$attr.' /></tpl>';
         $xml    =   simplexml_load_string($xml);
-        $xml    or  SharinException::throwing('_XML_TAG_ERROR_:'.$attr);
+        $xml    or  Exception::throwing('_XML_TAG_ERROR_:'.$attr);
         $xml    =   (array)($xml->tag->attributes());
         if(isset($xml['@attributes'])){
             $array  =   array_change_key_case($xml['@attributes']);
@@ -859,7 +859,7 @@ class Think implements ViewInterface {
                     if( isset($array[$name])) {
                         $array[$name] = str_replace('___','&',$array[$name]);
                     }elseif(false !== array_search($name,$must)){
-                        return SharinException::throwing('_PARAM_ERROR_:'.$name);
+                        return Exception::throwing('_PARAM_ERROR_:'.$name);
                     }
                 }
                 return $array;

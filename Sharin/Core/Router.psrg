@@ -2,7 +2,7 @@
 namespace Sharin\Core;
 use Sharin\Component;
 use Sharin\Developer;
-use Sharin\SharinException;
+use Sharin\Exception;
 use Sharin\Utils;
 
 /**
@@ -409,11 +409,11 @@ class Router extends Component {
      * @param string $ppb
      * @param string $pkvb
      * @return array
-     * @throws SharinException
+     * @throws Exception
      */
     public static function fetchKeyValuePair($params,$ppb='/',$pkvb=null){//解析字符串成数组
         $pc = [];
-        if(!$ppb) throw new SharinException("参数分隔符不能为空");
+        if(!$ppb) throw new Exception("参数分隔符不能为空");
         if($ppb !== $pkvb){//使用不同的分割符
             $params = trim($params," {$ppb}{$pkvb}");
             $parampairs = explode($ppb,$params);

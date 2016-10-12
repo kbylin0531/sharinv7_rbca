@@ -1,5 +1,6 @@
 <?php
 use Sharin\ClassLoader;
+use Sharin\Utils;
 use Sharin\Behaviour;
 use Sharin\Core\Dispatcher;
 use Sharin\Core\Router;
@@ -9,39 +10,49 @@ use Sharin\Core\Response;
 use Sharin\Core\ExceptionHandler;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Exceptions\RouteParseFailedException;
-use Sharin\Behaviour\HtmlCache as HC;
-//获取开始运行时状态
-$GLOBALS['web_begin'] = [
-    microtime(true),
+use Sharin\Behaviour\HtmlCache;
+
+//---------------------------------------- 获取开始运行时状态 ------------------------------------------------//
+$web_begin = [
+    $_SERVER['REQUEST_TIME_FLOAT'],
     memory_get_usage(),
 ];
 
-//---------------------------------------- 通用常量定义 ---------------------------------------------//
+//---------------------------------------- 通用常量定义 -----------------------------------------------------//
 require __DIR__.'/Common/constant.inc';
-if(SR_IS_CLI) die('only run in web mode');
-//-------------------------- WEB模式常量定义 --------------------------------------------------//
+
+//---------------------------------------- WEB模式常量定义 --------------------------------------------------//
 define('SR_NOW_MICRO',  $_SERVER['REQUEST_TIME_FLOAT']);//(int)($_SERVER['REQUEST_TIME_FLOAT']*1000)//isset($_SERVER['REQUEST_TIME_FLOAT'])? $_SERVER['REQUEST_TIME_FLOAT']:microtime(true)
 define('SR_NOW',        $_SERVER['REQUEST_TIME']);
 define('SR_IS_AJAX',    ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) and strtoupper($_SERVER['HTTP_X_REQUESTED_WITH']) == 'XMLHTTPREQUEST') ));
-define('SR_IS_POST',    strtoupper($_SERVER['REQUEST_METHOD']) === 'POST');//“GET”, “HEAD”，“POST”，“PUT”
+define('SR_REQUEST_METHOD',strtoupper($_SERVER['REQUEST_METHOD']));//“GET”, “HEAD”，“POST”，“PUT” ...
 define('SR_IS_HTTPS',   isset ($_SERVER ['HTTPS']) and $_SERVER ['HTTPS'] === 'on');
-define('SR_HTTP_PREFIX',SR_IS_HTTPS ? 'https://' : 'http://' );
-define('SR_PUBLIC_URL',SR_HTTP_PREFIX.$_SERVER['SERVER_NAME'].((80 == $_SERVER['SERVER_PORT'])? dirname($_SERVER['SCRIPT_NAME']) : ":{$_SERVER['SERVER_PORT']}".dirname($_SERVER['SCRIPT_NAME'])));
-defined('SR_PAGE_TRACE_ON') or define('SR_PAGE_TRACE_ON', true);//在处理微信签名检查时会发生以外的错误
+//应用名称和目录
+defined('SR_APP_NAME')  or define('SR_APP_NAME','Web');
+defined('SR_PATH_APP')  or define('SR_PATH_APP',SR_PATH_BASE.'/'.SR_APP_NAME);
+//请求方法
+const SR_IS_POST = SR_REQUEST_METHOD === 'POST';
+const SR_HTTP_PREFIX = SR_IS_HTTPS ? 'https://' : 'http://' ;
+//公共URL
+define('SR_PUBLIC_URL',SR_HTTP_PREFIX.$_SERVER['SERVER_NAME'].
+    (
+        (80 == $_SERVER['SERVER_PORT'])?
+            dirname($_SERVER['SCRIPT_NAME']) :
+            ":{$_SERVER['SERVER_PORT']}".dirname($_SERVER['SCRIPT_NAME']))
+    );
 
-//---------------------------------------- 加载类包 ---------------------------------------------//
+//---------------------------------------- 加载类包 -------------------------------------------------------//
 require __DIR__.'/Core/bundle.inc';
 
-//---------------------------------------- 开发模式设置 -----------------------------------------//
+//---------------------------------------- 开发模式设置 ---------------------------------------------------//
 if(SR_DEBUG_MODE_ON) {
     //开发者模式
     error_reporting(-1);
     ini_set('display_errors', 1);
 
-    Developer::import('web_begin',$GLOBALS['web_begin']);
-
+    Developer::import('web_begin',$web_begin);
+    SR_IS_CLI and die('only run in web mode');
     require __DIR__.'/Common/debug_suit.inc';
-    require __DIR__.'/Common/environment.inc';
 }else{
     //生产环境
     error_reporting(-1);// version >= 5.3 使用 E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT & ~E_USER_NOTICE & ~E_USER_DEPRECATED
@@ -56,28 +67,26 @@ final class Sharin {
      * @var array 常规设置(系统内置的类的惯例配置在此配置)
      */
     private static $convention = [
-        'APP_NAME'          => 'Web',//App dir name
         'TIMEZONE_ZONE'     => 'Asia/Shanghai',
-        'EXCEPTION_CLEAN'   => false,//it will clean the output before if error or exception occur
 
         //session的memcache支持
         'SESSION_MEMCACHE_ON'   => false,
         'SESSION_MEMCACHE_IP'   => '127.0.0.1',
         'SESSION_MEMCACHE_PORT' => '11211',
 
-        'BEHAVIOURS'        => [
+        'BEHAVIOUR'        => [
             ON_INIT    => [],
             ON_INITED  => [],
             ON_START   => [
-                HC::class,
+                HtmlCache::class,
             ],
             ON_ROUTE    => [],
             ON_CHECK    => [],
             ON_DISPATCH => [
-                HC::class,
+                HtmlCache::class,
             ],
             ON_STOP     => [
-                HC::class,
+                HtmlCache::class,
             ],
         ],
 
@@ -94,25 +103,23 @@ final class Sharin {
     ];
 
     /**
-     * initize the behaviour of this system
+     * 初始化并注册Sharin的行为
      * @param array $config system configuration
      * @return void
      * @throws ParameterInvalidException
      */
-    public static function init(array $config=NONE_CONFIG){
-        Behaviour::register(self::$convention['BEHAVIOURS']);
+    public static function register(array $config=null){
+        Behaviour::register(self::$convention['BEHAVIOUR']);
         Behaviour::listen(ON_INIT);
-        $config and self::$convention = array_merge(self::$convention,$config);
+        $config !== null and self::$convention = Utils::merge(self::$convention,$config);
 
         //设置初始化时期常量
-        define('SR_APP_NAME',self::$convention['APP_NAME']);
-        define('SR_PATH_APP',   SR_PATH_BASE.'/'.SR_APP_NAME);
         date_default_timezone_set(self::$convention['TIMEZONE_ZONE']) or die('Date default timezone set failed!');
 
         //session控制
         if(self::$convention['SESSION_MEMCACHE_ON']){
-            ini_set('session.save_handler', 'memcached');
-            ini_set('session.save_path', 'tcp://'.self::$convention['SESSION_MEMCACHE_IP'].':'.self::$convention['SESSION_MEMCACHE_PORT']);
+            ini_set('session.save_handler', 'memcached') === false and die('session handler init failed');
+            ini_set('session.save_path', 'tcp://'.self::$convention['SESSION_MEMCACHE_IP'].':'.self::$convention['SESSION_MEMCACHE_PORT']) === false and die('session save path set failed');
         }
 
         //行为注册
@@ -123,7 +130,7 @@ final class Sharin {
             //行为监听
             Behaviour::listen(ON_SHUTDOWN);
             //显示trace
-            if(SR_PAGE_TRACE_ON and !SR_IS_AJAX) Developer::trace();
+            if(SR_DEBUG_MODE_ON and !SR_IS_AJAX) Developer::trace();
         });
 
         Configger::initialize(self::$convention['CONFIG_BEHAVIOUR']);
@@ -135,8 +142,6 @@ final class Sharin {
      * @throws RouteParseFailedException
      */
     public static function start(){
-        ob_end_clean();
-        ob_start();
         //执行服务端程序
         Behaviour::listen(ON_START);
         //可以执行一些安全性检查
@@ -204,7 +209,7 @@ final class Sharin {
     }
 
     /**
-     * 逆初始化，取消错误异常等注册并恢复原状
+     * 取消错误异常等注册并恢复原状
      * @static
      */
     public static function unregister(){

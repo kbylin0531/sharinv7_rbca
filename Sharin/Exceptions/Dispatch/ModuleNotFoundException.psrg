@@ -10,9 +10,9 @@
 namespace Sharin\Exceptions\Dispatch;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class ModuleNotFoundException extends SharinException
+class ModuleNotFoundException extends Exception
 {
 
 }

@@ -8,6 +8,9 @@
  */
 namespace Sharin;
 
+//运行环境检测
+version_compare(PHP_VERSION,'7','<') and die('Require php >= 7 !');
+
 
 function _buildMessage($params, $traces)
 {

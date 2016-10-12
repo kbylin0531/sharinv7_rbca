@@ -10,9 +10,9 @@
 namespace Sharin\Exceptions;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class RouteParseFailedException extends SharinException{
+class RouteParseFailedException extends Exception{
 
 
 }

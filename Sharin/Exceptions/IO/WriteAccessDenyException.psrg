@@ -9,14 +9,14 @@
 namespace Sharin\Exceptions\IO;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * Class WriteAccessDenyException
  * 拒绝写入文件系统异常
  * @package Sharin\Exceptions\IO
  */
-class WriteAccessDenyException extends SharinException
+class WriteAccessDenyException extends Exception
 {
 
 }

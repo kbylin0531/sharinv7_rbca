@@ -79,3 +79,4 @@ Sharingan:
     28:文件后缀改为srg 16.09.23
     29:#!/usr/bin/env php 加入后可以直接输入PHP文件名像shell脚本那样执行（该命令的意思是使用环境变量中的php命令解析下面的脚本程序）
     30.当出现目录不可写等错误时，需要检查文件权限，通常可以修改所有者来获取访问权限 "chown -R asus.asus *"
+    31.类的注释中尽量使用完整名称而避免在注释之外使用use语句(可以提高一部分性能) property Sharin\Core\Logger $log 日志记录类

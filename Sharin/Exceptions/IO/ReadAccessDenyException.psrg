@@ -9,14 +9,14 @@
 namespace Sharin\Exceptions\IO;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * Class ReadAccessDenyException
  * 拒绝读取文件系统异常
  * @package Sharin\Exceptions\IO
  */
-class ReadAccessDenyException extends SharinException
+class ReadAccessDenyException extends Exception
 {
 
 }

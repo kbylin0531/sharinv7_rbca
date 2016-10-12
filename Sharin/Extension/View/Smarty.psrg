@@ -9,7 +9,7 @@
 
 namespace Sharin\Extension\View;
 use Sharin\Developer;
-use Sharin\SharinException as Exception;
+use Sharin\Exception as Exception;
 
 class Smarty implements ViewInterface {
 

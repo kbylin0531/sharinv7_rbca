@@ -1,0 +1,44 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Administrator
+ * Date: 2015/12/20
+ * Time: 11:14
+ */
+namespace System\Core\Dao;
+
+use Sharin\Core\Dao\DaoAbstract;
+
+class Oci extends DaoAbstract {
+    /**
+     * @param array $config
+     * @return string
+     */
+    public function buildDSN(array $config){
+        $dsn  =   'oci:dbname=//'.$config['hostname'].($config['port']?':'.$config['port']:'').'/'.$config['dbname'];
+        if(!empty($config['charset'])) {
+            $dsn  .= ';charset='.$config['charset'];
+        }
+        return $dsn;
+    }
+
+    public function escape($field)
+    {
+        // TODO: Implement escape() method.
+    }
+
+    public function getFields($tableName)
+    {
+        // TODO: Implement getFields() method.
+    }
+
+    public function getTables($dbName = null)
+    {
+        // TODO: Implement getTables() method.
+    }
+
+    protected function parseKey(&$key)
+    {
+        // TODO: Implement parseKey() method.
+    }
+}

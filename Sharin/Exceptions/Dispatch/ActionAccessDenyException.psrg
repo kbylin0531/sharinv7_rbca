@@ -10,14 +10,14 @@
 namespace Sharin\Exceptions\Dispatch;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * Class ActionAccessDenyException
  * 仅允许访问静态的公开方法
  * @package Sharin\Exceptions\Dispatch
  */
-class ActionAccessDenyException extends SharinException {
+class ActionAccessDenyException extends Exception {
 
 
 

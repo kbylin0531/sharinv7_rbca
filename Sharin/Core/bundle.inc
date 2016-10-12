@@ -3,7 +3,7 @@
 * 系统预置的核心类库
 */
 namespace Sharin ;
-use Exception;
+use Exception as E;
 use Sharin\Core\Storage;
 use Sharin\Exceptions\ConfigParseFailedException;
 use Sharin\Library\Helper\Ini;
@@ -372,7 +372,7 @@ final class ClassLoader {
             is_file($path) and require(self::$map[$clsnm] = $path);
         }
         //检查是否存在继承关系
-        if(Utils::checkExtends($clsnm,Component::class)){
+        if(class_exists($clsnm,false) and Utils::checkExtends($clsnm,Component::class)){
             call_user_func([$clsnm,'initializationize']);
         }
     }
@@ -380,25 +380,25 @@ final class ClassLoader {
     /**
      * register class autoloader
      * @param callable $autoloader
-     * @throws SharinException
+     * @throws Exception
      */
     public static function register(callable $autoloader=null){
         if(!spl_autoload_register($autoloader?$autoloader:[static::class,'load'],false,true)){
-            SharinException::throwing('Faile to register class autoloader!');
+            Exception::throwing('Faile to register class autoloader!');
         }
     }
 
 }
 
 /**
- * Class SharinException 异常错误类
+ * Class Exception 异常错误类
  * 同时负责管理错误和异常的管理
  * @package Sharin
  */
-class SharinException extends Exception {
+class Exception extends E {
 
     /**
-     * SharinException constructor.
+     * Exception constructor.
      */
     public function __construct(){
         $message = count($args = func_get_args()) > 1? var_export($args,true) : $args[0];
@@ -409,7 +409,7 @@ class SharinException extends Exception {
      * 直接抛出异常信息
      * @param ...
      * @return mixed
-     * @throws SharinException
+     * @throws Exception
      */
     public static function throwing(){
         $clsnm = static::class;//extend class name
@@ -475,7 +475,7 @@ final class Configger {
                 }
                 // Closure is not suggest in config file due to var_export could not do well with closure
                 // it will be translated to 'method Closure::__set_state()'
-                Storage::write($litefile,'<?php return '.var_export(self::$_cache,true).';') or SharinException::throwing("配置无法写入文件'{$litefile}'");
+                Storage::write($litefile,'<?php return '.var_export(self::$_cache,true).';') or Exception::throwing("配置无法写入文件'{$litefile}'");
 
 //                    dumpout('缓存文件不存在，或者已经过期（配置目录比缓存文件新旧表示过期），已经完成lite文件的建立工作', self::$_cache);
             }else{

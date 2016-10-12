@@ -3,8 +3,7 @@
  * 无论是客户端模式还是web模式通用的常量定义在此文件中
  */
 const SHARIN_VERSION    = 1;
-const NONE_CONFIG       = null;
-const USE_DEFAULT       = null;
+//Component类的重要属性
 const BASE_ON_DRIVER        = 'BASE_ON_DRIVER';
 const BASED_DRIVER_INDEX    = 'BASED_DRIVER_INDEX';
 const DRIVER_CLASS_LIST     = 'DRIVER_CLASS_LIST';
@@ -37,9 +36,9 @@ const ACTION_DELETE = 3;//删除操作,将使用到$_where字段
 const DS = DIRECTORY_SEPARATOR;
 
 const SR_IS_CLI = PHP_SAPI === 'cli';
-define('SR_IS_WIN',false !== stripos(PHP_OS, 'WIN'));//const IS_WINDOWS = PHP_OS === 'WINNT';
+define('SR_IS_WIN',     false !== stripos(PHP_OS, 'WIN'));//const IS_WINDOWS = PHP_OS === 'WINNT';
 defined('SR_DEBUG_MODE_ON') or define('SR_DEBUG_MODE_ON', true);//可以提高响应速度
-defined('SR_OS_ENCODING') or define('SR_OS_ENCODING','UTF-8');//系统编码
+defined('SR_OS_ENCODING')   or define('SR_OS_ENCODING','UTF-8');//系统编码
 
 //目录常量
 define('SR_PATH_BASE', dirname(dirname(__DIR__)));

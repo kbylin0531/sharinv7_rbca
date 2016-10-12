@@ -1,6 +1,6 @@
 <?php
 namespace Sharin\Core;
-use Sharin\SharinException;
+use Sharin\Exception;
 
 /**
  * Class URLer URL管理类
@@ -180,13 +180,13 @@ class URLer extends Router {
      * @param string $ppb
      * @param string $pkvb
      * @return string
-     * @throws SharinException
+     * @throws Exception
      */
     public static function toParametersString(array $params=null,$ppb='/',$pkvb=null){
         $temp = '';
         if($params){
             //参数检测
-            if(!$ppb) throw new SharinException('参数目录分隔符不能为空');
+            if(!$ppb) throw new Exception('参数目录分隔符不能为空');
             $pkvb or $pkvb = $ppb;
 
             $flag = true;

@@ -3,21 +3,38 @@ namespace Sharin\Extension;
 use Sharin\Behaviour;
 use Sharin\Core\Response;
 use Sharin\Core\URLer;
-use Sharin\SharinException;
+use Sharin\Exception;
 use Sharin;
+use Sharin\Utils;
+use Sharin\Component;
 use Sharin\Core\SEK;
 /**
- * Class Controller
+ * Class Controller 控制器类
+ *
+ * @property Sharin\Core\Logger $log 日志记录类
+ * @property Sharin\Core\Lang   $lang 语言类
  *
  * @package Sharin\Core
  */
-class Controller {
+class Controller extends Component{
+
+    protected static $name = 'controller';
+
+    public static function initializationize(array $config = null){
+        parent::initializationize([
+            // Sharin属性名称与对应Component类的映射关系
+            'PROPERTY_MAP'  => [
+                'log'   => 'Sharin\\Core\\Logger',
+                'lang'  => 'Sharin\\Core\\Lang',
+            ],
+        ]);
+    }
 
     /**
      * 分配给模板的变量集合
      * @var array
      */
-    protected $_tVars = [];
+    protected $tVar = [];
 
     /**
      * 控制器上下文环境
@@ -30,7 +47,7 @@ class Controller {
      * @access private 可以保证以来它的方法获取的上下文环境是new过控制器之后的上下文环境中获取的
      * @param string|null $clsnm 类名称,不设置的情况下将自动获取
      * @return array
-     * @throws SharinException
+     * @throws Exception
      */
     protected static function getContext($clsnm=null){
         null === $clsnm and $clsnm = static::class;//get_called_class()
@@ -42,7 +59,7 @@ class Controller {
         }else{
             //如果出现名称空间不规范的情况，直接终止程序
             //一般会在调度器中检测不到类时抛出异常，所以这一步很难执行到
-            throw new SharinException("控制器'{$clsnm}'不符合命名空间规范！");
+            throw new Exception("控制器'{$clsnm}'不符合命名空间规范！");
         }
     }
 
@@ -51,7 +68,7 @@ class Controller {
      * @param string $tname 主题名称
      * @return $this
      */
-    protected function theme($tname){
+    protected function theme($tname) {
         isset($this->_context) or static::getContext();
         $this->_context['t'] = $tname;
         return $this;
@@ -68,10 +85,10 @@ class Controller {
     protected function assign($tpl_var,$value=null){
         if (is_array($tpl_var)) {
             foreach ($tpl_var as $_key => $_val) {
-                $_key and $this->_tVars[$_key] = $_val;
+                $_key and $this->tVar[$_key] = $_val;
             }
         } else {
-            $tpl_var and $this->_tVars[$tpl_var] = $value;
+            $tpl_var and $this->tVar[$tpl_var] = $value;
         }
         return $this;
     }
@@ -103,7 +120,7 @@ class Controller {
         }
         //模板变量导入
         Behaviour::listen(ON_ASSIGN);
-        View::assign($this->_tVars);
+        View::assign($this->tVar);
         //格式化模板变量
         Behaviour::listen(ON_DISPLAY_BEGIN);
         View::display($context,$cache_id,$compile_id,$parent);
@@ -168,6 +185,25 @@ class Controller {
      */
     public function error($message,$waittime=3,$title='error'){
         static::jump($message,$title,false,1,$waittime);
+    }
+
+    /**
+     * 获取控制器附带的属性
+     * @param string $name
+     * @return Component
+     * @throws Exception 属性不是继承自Component或者访问不存在的属性都会出现异常
+     */
+    public function __get($name){
+        static $_instance = [];
+        if(!isset($_instance[$name])){
+            $clsnm = self::convention('PROPERTY_MAP.'.$name,null);
+            if(null !== $clsnm and Utils::checkExtends($clsnm,Component::class)){
+                $_instance[$name] = $clsnm::instance();
+            }else{
+                throw new Exception("Invalid property '$name' !");
+            }
+        }
+        return $_instance[$name];
     }
 
 }

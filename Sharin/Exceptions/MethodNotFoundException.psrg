@@ -9,8 +9,8 @@
 namespace Sharin\Exceptions;
 
 
-use Sharin\SharinException;
+use Sharin\Exception;
 
-class MethodNotFoundException extends SharinException{
+class MethodNotFoundException extends Exception{
 
 }
