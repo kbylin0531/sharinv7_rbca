@@ -261,7 +261,7 @@ function get_ueditor_image_path($str){
  */
 function preg_ueditor_image_path($data){
     // 兼容图片路径
-    $root_path=rtrim($_SERVER['SCRIPT_NAME'],'/index.php');
+    $root_path=rtrim($_SERVER['SCRIPT_NAME'],'/'.ENTRY_FILE);
     // 正则替换图片
     $data=htmlspecialchars_decode($data);
     $data=preg_replace('/src=\"^\/.*\/Upload\/image\/ueditor$/','src="'.$root_path.'/Upload/image/ueditor',$data);

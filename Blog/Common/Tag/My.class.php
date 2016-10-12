@@ -3,7 +3,18 @@
 namespace Common\Tag;
 use Think\Template\TagLib;
 
+
 class My extends TagLib {
+
+    protected $public_path = '';
+
+    public function __construct()
+    {
+        $this->public_path = SR_PUBLIC_URL;
+        define('__HOME_JS__','') ;
+        define('__HOME_CSS__','') ;
+    }
+
     // 定义标签
     protected $tags=array(
         'jquery'=>array('attr'=>'','close'=>0),
@@ -18,12 +29,12 @@ class My extends TagLib {
 
     //引入jquery
     public function _jquery(){
-        return '<script src="__PUBLIC__/static/js/jquery-2.0.0.min.js"></script>';
+        return '<script src="{$this->public_path}/static/js/jquery-2.0.0.min.js"></script>';
     }
 
     //引入animate
     public function _animate(){
-        return '<link rel="stylesheet" type="text/css" href="__PUBLIC__/static/css/animate.css">';
+        return '<link rel="stylesheet" type="text/css" href="'.$this->public_path.'/static/css/animate.css">';
     }
 
     /**
@@ -32,10 +43,10 @@ class My extends TagLib {
     public function _bootstrapcss(){
         $link=<<<php
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <link rel="stylesheet" type="text/css" href="__PUBLIC__/static/bootstrap-3.3.5/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="__PUBLIC__/static/bootstrap-3.3.5/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" type="text/css" href="__PUBLIC__/static/font-awesome-4.4.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="__PUBLIC__/static/css/bjy.css">
+    <link rel="stylesheet" type="text/css" href="{$this->public_path}/static/bootstrap-3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{$this->public_path}/static/bootstrap-3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" type="text/css" href="{$this->public_path}/static/font-awesome-4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="{$this->public_path}/static/css/bjy.css">
     <link rel="stylesheet" type="text/css" href="__HOME_CSS__/index.css">
 php;
         return $link;
@@ -47,28 +58,28 @@ php;
     public function _bootstrapjs(){
         $web_statistics=C('WEB_STATISTICS');
         $link=<<<php
-<script src="__PUBLIC__/static/js/jquery-2.0.0.min.js"></script>
+<script src="{$this->public_path}/static/js/jquery-2.0.0.min.js"></script>
 <script>
     logoutUrl="{:U('Home/User/logout')}";
 </script>
-<script src="__PUBLIC__/static/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="{$this->public_path}/static/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <!--[if lt IE 9]>
-<script src="__PUBLIC__/static/js/html5shiv.min.js"></script>
-<script src="__PUBLIC__/static/js/respond.min.js"></script>
+<script src="{$this->public_path}/static/js/html5shiv.min.js"></script>
+<script src="{$this->public_path}/static/js/respond.min.js"></script>
 <![endif]-->
-<script src="__PUBLIC__/static/pace/pace.min.js"></script>
+<script src="{$this->public_path}/static/pace/pace.min.js"></script>
 <script src="__HOME_JS__/index.js"></script>
 <!-- 百度页面自动提交开始 -->
 <script>
 (function(){
     var bp = document.createElement('script');
     var curProtocol = window.location.protocol.split(':')[0];
-    if (curProtocol === 'https') {
-        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
-    }
-    else {
-        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
-    }
+//    if (curProtocol === 'https') {
+//        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+//    }
+//    else {
+//        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+//    }
     var s = document.getElementsByTagName("script")[0];
     s.parentNode.insertBefore(bp, s);
 })();
@@ -87,7 +98,7 @@ php;
     */
     public function _icheckcss(){
         $link=<<<php
-    <link rel="stylesheet" href="__PUBLIC__/static/iCheck-1.0.2/skins/all.css">
+    <link rel="stylesheet" href="{$this->public_path}/static/iCheck-1.0.2/skins/all.css">
 php;
         return $link;
     }
@@ -99,7 +110,7 @@ php;
     public function _icheckjs($tag){
         $color=isset($tag['color']) ? $tag['color'] : 'blue';
         $link=<<<php
-<script src="__PUBLIC__/static/iCheck-1.0.2/icheck.min.js"></script>
+<script src="{$this->public_path}/static/iCheck-1.0.2/icheck.min.js"></script>
 <script>
 $(document).ready(function(){
     $('.icheck').iCheck({
@@ -122,8 +133,8 @@ php;
         $content=isset($tag['content']) ? $tag['content'] : '';
         $link=<<<php
 <script id="container" name="$name" type="text/plain">$content</script>
-<script src="__PUBLIC__/static/ueditor1_4_3/ueditor.config.js"></script>
-<script src="__PUBLIC__/static/ueditor1_4_3/ueditor.all.js"></script>
+<script src="{$this->public_path}/static/ueditor1_4_3/ueditor.config.js"></script>
+<script src="{$this->public_path}/static/ueditor1_4_3/ueditor.all.js"></script>
 <script>
     var ue = UE.getEditor('container');
 </script>

@@ -36,7 +36,7 @@ class ArticlePicModel extends BaseModel{
             ->order('ap_id asc')
             ->limit(1)
             ->select();
-        $root_path=rtrim($_SERVER['SCRIPT_NAME'],'/index.php');
+        $root_path=rtrim($_SERVER['SCRIPT_NAME'],'/'.ENTRY_FILE);
         $data[0]['path']=$root_path.$data[0]['path'];
         return $data[0]['path'];
     }

@@ -3,22 +3,27 @@
  * 安装向导
  */
 header('Content-type:text/html;charset=utf-8');
+
+require __DIR__.'/../../Sharin/web.module';
+
+define('INSTALL_DIR',SR_PATH_BASE.'/Public/install/');
+
 // 检测是否安装过
-if (file_exists('./install.lock')) {
+if (file_exists(INSTALL_DIR.'install.lock')) {
     echo '你已经安装过该系统，重新安装需要先删除./Public/install/install.lock 文件';
     die;
 }
 // 同意协议页面
 if(@!isset($_GET['c']) || @$_GET['c']=='agreement'){
-    require './agreement.html';
+    require INSTALL_DIR.'agreement.php';
 }
 // 检测环境页面
 if(@$_GET['c']=='test'){
-    require './test.html';
+    require INSTALL_DIR.'test.php';
 }
 // 创建数据库页面
 if(@$_GET['c']=='create'){
-    require './create.html';
+    require INSTALL_DIR.'create.php';
 }
 // 安装成功页面
 if(@$_GET['c']=='success'){
@@ -67,9 +72,9 @@ return array(
 );
 php;
         // 创建数据库链接配置文件
-        file_put_contents('../../Application/Common/Conf/db.php', $db_str);
-        @touch('./install.lock');
-        require './success.html';
+        file_put_contents(SR_PATH_BASE.'/Blog/Common/Conf/db.php', $db_str);
+        @touch( INSTALL_DIR.'install.lock');
+        require INSTALL_DIR.'success.php';
     }
 
 }

@@ -22,7 +22,7 @@
             <ul class="nav navbar-nav b-nav-parent">
                 <li class="hidden-xs b-nav-mobile"></li>
                 <li class="b-nav-cname <eq name="cid" value="index">b-nav-active</eq> " >
-                    <a href="/" onclick="recordId('/',0)">首页</a>
+                    <a href="{:U('')}" onclick="recordId('/',0)">首页</a>
                 </li>
                 <foreach name="categorys" item="v">
                     <li class="b-nav-cname <eq name="cid" value="$v['cid']">b-nav-active</eq> ">
