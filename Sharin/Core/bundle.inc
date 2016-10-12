@@ -916,7 +916,7 @@ namespace Sharin {
         final public static function getStaticDriver(){
             $static = static::class;
             if(!isset(self::$_static_drivers[$static])){
-                $instance = self::instance(self::convention('BASED_DRIVER_INDEX',-1));/* -1 kennia mao gei*/
+                $instance = self::instance(self::convention(BASED_DRIVER_INDEX,-1));/* -1 kennia mao gei*/
                 if(false === $instance){
                     return false;
                 }
