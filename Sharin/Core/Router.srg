@@ -14,7 +14,7 @@ class Router extends Component {
 
     protected static $name = 'route';
 
-    public static function _initialization(array $config = null) {
+    public static function __initialization(array $config = null) {
         parent::__initialization([
             //------------------------
             //For URL route
@@ -91,19 +91,17 @@ class Router extends Component {
 
     /**
      * 解析URL或兼域名
-     * @return bool
+     * @return array
      */
     public static function parse(){
         $result = null;
         if(self::$_config['URI_ROUTE_ON']){
             $result = self::parseRoute();
             if(null !== $result){
-                self::$result = $result;
-                return true;
+                return  self::$result = $result;
             }
         }
-        self::$result = self::parseURL();
-        return true;
+        return self::$result = self::parseURL();
     }
 
     /**
@@ -113,8 +111,8 @@ class Router extends Component {
      * @return array
      */
     private static function parseURL($uri=null,$hostname=null){
-        //API模式下
         if(self::$_config['API_MODE_ON']){
+            //API模式下
             self::parseInAPI();
         }else{
             $uri or $uri = self::pathInfo(true);
@@ -332,7 +330,7 @@ class Router extends Component {
      * @param string $uri 传递进来的URL字符串
      * @return array|string|null
      */
-    private static function _matchRegular($pattern, $rule, $uri){
+    public static function _matchRegular($pattern, $rule, $uri){
         $result = null;
         // do the RegEx match? use '#' to ignore '/'
         if (preg_match('#^'.$pattern.'$#', $uri, $matches)) {

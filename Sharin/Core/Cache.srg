@@ -8,15 +8,12 @@
 
 namespace Sharin\Core;
 use Sharin\Component;
+use Sharin\Developer;
+use Sharin\SharinException;
 
 /**
  * Class Cache 缓存控制类
  *
- * @method string|false get(string $name,$replace=null) static 读取缓存
- * @method bool has(string $name) static 判断缓存是否存在
- * @method bool set(string $name,mixed $value,int $expire=null) static 写入缓存
- * @method bool delete(string $name) static 删除缓存
- * @method bool clean() static empty the cache
  *
  * @package Sharin\Core
  */
@@ -32,24 +29,10 @@ class Cache extends Component {
 
     public static function __initialization(array $config = null){
         parent::__initialization([
-            BASE_ON_DRIVER        => true,   //静态方法是否基于驱动
-            BASED_DRIVER_INDEX    => 0,      //静态方法基于的驱动角标
-
             DRIVER_CLASS_LIST => [
-                'Sharin\\Core\\Cache\\File',
                 'Sharin\\Core\\Cache\\Memcache',
             ],
             DRIVER_CONFIG_LIST => [
-                [
-                    //from thinkphp ,match case
-                    'expire'        => 0,
-                    'cache_subdir'  => false,
-                    'path_level'    => 1,
-                    'prefix'        => '',
-                    'length'        => 0,
-                    'data_compress' => false,
-                    'path'          => SR_PATH_RUNTIME.'/cache/file/',
-                ],
                 [
                     'host'      => 'localhost',
                     'port'      => 11211,
@@ -62,8 +45,32 @@ class Cache extends Component {
             ],
             //5分钟
             'DEFAULT_CACHE_EXPIRE'  => 300,
+
+
+
+            'expire'        => 3600,
+            'cache_subdir'  => true,
+            'path_level'    => 1,
+            'prefix'        => '',
+            'length'        => 0,
+
+            'path'          => SR_PATH_RUNTIME.'/cache/file/',
         ]);
+
+        self::$options = self::convention();
+
+        $path = &self::$options['path'];
+        if (substr($path, -1) != DIRECTORY_SEPARATOR) {
+            $path .= DIRECTORY_SEPARATOR;
+        }
+
+        //检查是否可用
+        if(!Storage::has($path,Storage::READ_ACCESS | Storage::WRITE_ACCESS)){
+            throw new SharinException("缓存目录'{$path}'不可读或不可写");
+        };
     }
+
+    private static $options = [];
 
     /**
      * 缓存开始记录标记
@@ -89,8 +96,9 @@ class Cache extends Component {
         if($level){
             if(isset(self::$idStack[$level])){
                 $identify = self::$idStack[$level];
+
                 if($id4check and $id4check !== $identify){
-                    self::$_error = "输入的检查项'{$id4check}'不同于LEVEL-{$level}的缓存项ID '{$identify}'，请确认!";
+                    Developer::trace("输入的检查项'{$id4check}'不同于LEVEL-{$level}的缓存项ID '{$identify}'，请确认!");
                     return false;
                 }else{
                     $content = ob_get_clean();
@@ -99,12 +107,195 @@ class Cache extends Component {
                     return $content;
                 }
             }else{
-                self::$_error = "LEVEL为'{$level}'的记录不存在于缓存栈中，OB缓存可能通过其他方式开启并且在为手动关闭的情况下调用endWith方法！";
+                Developer::trace("LEVEL为'{$level}'的记录不存在于缓存栈中，OB缓存可能通过其他方式开启并且在为手动关闭的情况下调用endWith方法！");
                 return false;
             }
         }else{
-            self::$_error = 'OB缓存未处于开启状态！';
+            Developer::trace('OB缓存未处于开启状态！');
             return false;
         }
     }
+
+
+
+
+
+
+//-------------------------------------------- File --------------------------------------------------------------------------//
+
+    /**
+     * 取得变量的存储文件名
+     * @access private
+     * @param string $name 缓存变量名
+     * @return string
+     */
+    private static function filename($name){
+        if (self::$options['cache_subdir']) {
+            // 使用子目录
+            $name = substr($name, 0, 2) . DIRECTORY_SEPARATOR . substr($name, 2);
+        }
+        if (self::$options['prefix']) {
+            $name = self::$options['prefix'] . DIRECTORY_SEPARATOR . $name;
+        }
+        $filename = self::$options['path'] . $name . '.cache';
+        $dir = dirname($filename);
+        Storage::mkdir($dir) or SharinException::throwing("Failed to mkdir '{$dir}'");
+        return $filename;
+    }
+
+    /**
+     * 判断缓存是否存在
+     * @access public
+     * @param string $name 缓存变量名
+     * @return bool
+     */
+    public static function has($name)
+    {
+        $filename = self::filename($name);
+        $content = Storage::read($filename);
+        if(false !== $content){
+            $expire = intval(substr($content, 8, 12));
+            if (self::checkExpire($filename,$expire)) {
+                //缓存过期删除缓存文件
+                self::delete($filename);
+                return false;
+            }else{
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检查文件是否过期
+     * @static
+     * @param $path
+     * @param $expire
+     * @return bool
+     */
+    public static function checkExpire($path,$expire){
+        return 0 != $expire && time() > (Storage::mtime($path) + $expire);
+    }
+
+
+    /**
+     * 读取缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @param mixed  $default 默认值
+     * @return mixed
+     */
+    public static function get($name, $default = false){
+        $filename = self::filename($name);
+        if (!is_file($filename)) {
+            return $default;
+        }
+        $content = file_get_contents($filename);
+        if (false !== $content) {
+            $expire = (int) substr($content, 0, 12);
+            if (self::checkExpire($filename,$expire)) {
+                //缓存过期删除缓存文件
+                self::delete($filename);
+                return $default;
+            }
+            $content = unserialize(substr($content, 12));
+            return $content;
+        } else {
+            return $default;
+        }
+    }
+
+    /**
+     * 写入缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @param mixed $value  存储数据
+     * @param int $expire  有效时间 0为永久
+     * @return boolean
+     */
+    public static function set($name, $value, $expire = null) {
+        if (!isset($expire)) {
+            $expire = self::$options['expire'];
+        }
+        $filename = self::filename($name);
+        $data     = serialize($value);
+//        $data   = "<?php\n//" . sprintf('%012d', $expire) . $data . "\n?_>";
+        $data   = sprintf('%012d', $expire) . $data;
+        $result = file_put_contents($filename, $data);
+        if ($result) {
+            if (self::$options['length'] > 0) {
+                // 记录缓存队列
+                $queue_file = dirname($filename) . '/__info__.php';
+                $queue      = unserialize(file_get_contents($queue_file));
+                if (!$queue) {
+                    $queue = [];
+                }
+                if (false === array_search($name, $queue)) {
+                    array_push($queue, $name);
+                }
+
+                if (count($queue) > self::$options['length']) {
+                    // 出列
+                    $key = array_shift($queue);
+                    // 删除缓存
+                    unlink(self::filename($key));
+                }
+                file_put_contents($queue_file, serialize($queue));
+            }
+            clearstatcache();
+            return true;
+        } else {
+            return false;
+        }
+    }
+    /**
+     * 删除缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @return bool 缓存文件不存在时执行删除操作返回true，文件存在时的返回值是unlink的返回值
+     */
+    public static function delete($name){
+        $name = self::filename($name);
+        return Storage::unlink($name);
+    }
+    /**
+     * 清除缓存
+     * @access public
+     * @return boolean
+     */
+    public static function clear()
+    {
+        $fileLsit = (array) glob(self::$options['path'] . '*');
+        foreach ($fileLsit as $path) {
+            is_file($path) && unlink($path);
+        }
+        return true;
+    }
+
+    /**
+     * 清除缓存
+     * @access public
+     * @param string $name 缓存变量名,效果等同于rm方法
+     * @return int 返回成功删除的缓存数目，否则返回false
+     */
+    public static function clean($name=null){
+        if(isset($name)) return self::delete($name) === true?1:0;
+
+//        $path = self::$options['temp'];//修正为以下
+        $path = self::$options['path'];
+        if ($dir = opendir($path)) {
+            $c = 0;
+            while ($file = readdir($dir)) {
+                if(!is_dir($file)){
+                    unlink($path . $file);//不删除目录，只针对文件进行删除
+                    ++ $c;
+                }
+            }
+            closedir($dir);
+            return $c;
+        }else{
+            return 0;
+        }
+    }
+
 }

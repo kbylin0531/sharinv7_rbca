@@ -16,22 +16,10 @@ class View extends Component {
     public static function __initialization(array $config = null){
         parent::__initialization([
             DRIVER_CLASS_LIST   => [
-                'Sharin\\Core\\View\\Smarty',
-                'Sharin\\Core\\View\\Think',
+                'Sharin\\Extension\\View\\Think',
+                'Sharin\\Extension\\View\\Smarty',
             ],
             DRIVER_CONFIG_LIST  => [
-                [
-                    'SMARTY_DIR'        => SR_PATH_BASE.'/Vendor/smarty3/libs/',
-                    'TEMPLATE_CACHE_DIR'    => SR_PATH_RUNTIME.'/View/',
-                    'SMARTY_CONF'       => [
-                        //模板变量分割符号
-                        'left_delimiter'    => '{',
-                        'right_delimiter'   => '}',
-                        //缓存开启和缓存时间
-                        'caching'        => true,
-                        'cache_lifetime'  => 15,
-                    ],
-                ],
                 [
                     'CACHE_ON'         => true,//缓存是否开启
                     'CACHE_EXPIRE'     => 10,//缓存时间，0便是永久缓存,仅以设置为30
@@ -49,6 +37,18 @@ class View extends Component {
                     'VAR_IDENTIFY'     =>  'array',     // 模板变量识别。留空自动判断,参数为'obj'则表示对象
 
                     'TMPL_PARSE_STRING'=> [],//用户自定义的字符替换
+                ],
+                [
+                    'SMARTY_DIR'        => SR_PATH_BASE.'/Vendor/smarty3/libs/',
+                    'TEMPLATE_CACHE_DIR'    => SR_PATH_RUNTIME.'/View/',
+                    'SMARTY_CONF'       => [
+                        //模板变量分割符号
+                        'left_delimiter'    => '{',
+                        'right_delimiter'   => '}',
+                        //缓存开启和缓存时间
+                        'caching'        => true,
+                        'cache_lifetime'  => 15,
+                    ],
                 ],
             ],
             //模板文件提示错误信息模板

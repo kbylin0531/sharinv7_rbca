@@ -42,7 +42,7 @@
                     <h3>Backtrace：</h3>
                 </div>
                 <div class="text">
-                    <p><?php \Sharin\println($trace); ?></p>
+                    <p><?php \Sharin\dump($trace); ?></p>
                 </div>
             </div>
         <?php }?>

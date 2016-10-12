@@ -1,11 +1,11 @@
 <?php
 namespace Sharin\Extension;
 use Sharin\Behaviour;
-use Sharin\Core\Input;
-use Sharin\Library\Response;
+use Sharin\Core\Response;
+use Sharin\Core\URLer;
 use Sharin\SharinException;
 use Sharin\Utils;
-
+use Sharin\Core\SEK;
 /**
  * Class Controller
  *
@@ -120,7 +120,7 @@ class Controller {
      * @return void
      */
     public function redirect($compo,array $params=[],$time=0,$message=''){
-        $url = Router::url($compo,$params);
+        $url = URLer::build($compo,$params);
         Response::redirect($url,$time,$message);
     }
 

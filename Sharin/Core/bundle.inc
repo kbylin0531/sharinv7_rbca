@@ -3,17 +3,15 @@
  * 系统预置的核心类库
  */
 namespace Sharin {
-    use Sharin\Core\Logger;
     use Sharin\Core\Storage;
     use Sharin\Exceptions\ConfigParseFailedException;
     use Sharin\Library\Helper\Ini;
     use Sharin\Library\Helper\XMLer;
-    use Throwable;
     use Exception;
-    use Sharin\Core\Trace;
+    use Sharin\Extension\Trace;
     use Sharin\Exceptions\MethodNotFoundException;
     use Sharin\Exceptions\ParameterInvalidException;
-    use Sharin\Library\Response;
+    use Sharin\Core\Response;
 
     /**
      * Class Utils 内置工具类
@@ -22,23 +20,14 @@ namespace Sharin {
     final class Utils {
 
         /**
-         * 数据签名认证
-         * @param  array  $data 被认证的数据
-         * @return string       签名
-         */
-        public static function dataSign(array $data) {
-            ksort($data);
-            return sha1(http_build_query($data));
-        }
-        /**
          * 加载显示模板
          * @param string $tpl template name in folder 'Tpl'
          * @param array|null $vars vars array to extract
          * @param bool $clean it will clean the output cache if set to true
          * @param bool $isfile 判断是否是模板文件
          */
-        public static function template(string $tpl,array $vars=null,bool $clean=true,bool $isfile=false){
-            $clean and ob_get_level() > 0 and ob_end_clean();
+        public static function template(string $tpl,array $vars=null,bool $clean=false,bool $isfile=false){
+            $clean and Response::cleanOutput();
             $vars and extract($vars, EXTR_OVERWRITE);
             $path = ($isfile or is_file($tpl))?$tpl:SR_PATH_FRAMEWORK."/Template/{$tpl}.php";
             is_file($path) or $path = SR_PATH_FRAMEWORK.'/Template/systemerror.php';
@@ -91,64 +80,6 @@ namespace Sharin {
             if(!class_exists($myname)) return false;
             $list = class_uses($myname,false);
             return isset($list[$traitname]);
-        }
-
-        /**
-         * 调用类的静态方法
-         * 注意，调用callable的时候如果是静态方法，则不能带小括号，就像函数名称一样
-         *      例如：$callable = "{$clsnm}::{$method}";将永远返回false
-         * @param string $clsnm class name
-         * @param string $method method name
-         * @return mixed|null
-         */
-        public static function callStatic($clsnm,$method){
-            if(class_exists($clsnm,false)) {
-                $callable = "{$clsnm}::{$method}";
-                if(is_callable($callable)){
-                    try{
-                        return $clsnm::$method();
-                    }catch (\Exception $e){
-                        if(SR_DEBUG_MODE_ON) Developer::trace($e->getMessage());
-                    }
-                }
-            }
-            return null;
-        }
-
-        /**
-         * 转换成php处理文件系统时所用的编码
-         * 即UTF-8转GB2312
-         * @param string $str 待转化的字符串
-         * @param string $strencode 该字符串的编码格式
-         * @return string|false 转化失败返回false
-         */
-        public static function toSystemEncode($str,$strencode='UTF-8'){
-            return $strencode === SR_OS_ENCODING? $str : iconv($strencode,SR_OS_ENCODING.'//IGNORE',$str);
-        }
-
-        /**
-         * 转换成程序使用的编码
-         * 即GB2312转UTF-8
-         * @param string $str 待转换的字符串
-         * @param string $program_encoding
-         * @return string|false 转化失败返回false
-         */
-        public static function toProgramEncode($str, $program_encoding='UTF-8'){
-            return $program_encoding === SR_OS_ENCODING? $str : iconv(SR_OS_ENCODING,"{$program_encoding}//IGNORE",$str);
-        }
-
-        /**
-         * 获取类常量
-         * use defined() to avoid error of E_WARNING level
-         * @param string $class 完整的类名称
-         * @param string $constant 常量名称
-         * @param mixed $replacement 不存在时的代替
-         * @return mixed
-         */
-        public static function constant($class,$constant,$replacement=null){
-            if(!class_exists($class,true)) return $replacement;
-            $constant = "{$class}::{$constant}";
-            return defined($constant)?constant($constant):$replacement;
         }
 
         /**
@@ -387,9 +318,10 @@ namespace Sharin {
                 }
                 if(func_num_args() > 1) $message = var_export(func_get_args(),true);
                 if(!is_string($message)) $message = var_export($message,true);
+                //同一个位置可能trace多次
                 if(isset(self::$_traces[$location])){
-                    $index ++;//it may called multi-times in some place
-                    $location = "$location ($index)";
+                    $index ++;
+                    $location = "$location ({$index})";
                 }
                 self::$_traces[$location] = $message;
             }
@@ -415,9 +347,6 @@ namespace Sharin {
             ],
             'Sharin'    => [
                 'ext'   => 'srg',
-            ],
-            'Web'       => [
-                'ext'   => 'class.php',
             ],
             'Explorer'  => [
                 'ext'   => 'class.php',
@@ -464,8 +393,6 @@ namespace Sharin {
                 $path = SR_PATH_BASE."/{$path}/{$rel}.{$ext}";
                 if(is_file($path)) include self::$map[$clsnm] = $path;
             }
-            Utils::callStatic($clsnm,'__initializationize');
-
             //检查是否存在继承关系
             if(Utils::checkExtends($clsnm,Component::class)){
                 call_user_func([$clsnm,'__initialization']);
@@ -509,72 +436,6 @@ namespace Sharin {
         public static function throwing(){
             $clsnm = static::class;//extend class name
             throw new $clsnm(func_get_args());
-        }
-
-        /**
-         * 处理错误信息
-         * @param $code
-         * @param $message
-         * @param $file
-         * @param $line
-         */
-        public static function handleError($code, $message, $file, $line){
-            Behaviour::listen(ON_ERROR);
-
-            Response::cleanOutput();//清空之前的输出
-            if(SR_IS_AJAX) exit("File:{$file}   Line:{$line} Message:{$message}\n");
-            if(SR_DEBUG_MODE_ON)  Response::sendHttpStatus(403,'Resource Error!');
-
-            $trace = debug_backtrace();
-            $vars = [
-                'message'   => "C:{$code}   S:{$message}",
-                'position'  => "File:{$file}   Line:{$line}",
-                'trace'     => $trace, //be careful
-            ];
-
-            if(SR_DEBUG_MODE_ON){
-                Utils::template('error',$vars);
-            }else{
-                Utils::template('user_error');
-            }
-            Behaviour::listen(ON_ERROR_END);
-        }
-
-        /**
-         * 处理异常
-         * @param Throwable $e
-         */
-        public static function handleException(Throwable $e) {
-            Behaviour::listen(ON_EXCEPTION);
-
-            Response::cleanOutput();
-            if(SR_IS_AJAX) {
-                $message = $e->getMessage();
-                Logger::record($message);
-                exit($message);
-            }
-            SR_DEBUG_MODE_ON or Response::sendHttpStatus(403,'Resource Exception!');
-
-            $trace = $e->getTrace();
-            if(!empty($trace[0])){
-                empty($trace[0]['file']) and $trace[0]['file'] = 'Unkown file';
-                empty($trace[0]['line']) and $trace[0]['line'] = 'Unkown line';
-
-                $vars = [
-                    'message'   => get_class($e).' : '.$e->getMessage(),
-                    'position'  => 'File:'.$trace[0]['file'].'   Line:'.$trace[0]['line'],
-                    'trace'     => $trace,
-                ];
-                if(SR_DEBUG_MODE_ON){
-                    Developer::trace($vars);//页面跟踪错误
-                    Utils::template('exception',$vars);
-                }else{
-                    Utils::template('user_error');
-                }
-            }else{
-                Utils::template('user_error');
-            }
-            Behaviour::listen(ON_EXCEPTION_END);
         }
     }
 
@@ -657,6 +518,7 @@ namespace Sharin {
          * @return array
          */
         public static function load(string $clsnm,bool $is_component=null){
+            Developer::trace(isset(self::$_cache[$clsnm]) ? self::$_cache[$clsnm] : $clsnm);
             if(!isset(self::$_cache[$clsnm])){
                 null === $is_component and $is_component = Utils::checkExtends($clsnm,Component::class);
                 self::$_cache[$clsnm] = self::loadInner($clsnm,$is_component);
@@ -692,7 +554,6 @@ namespace Sharin {
                 strtolower(str_replace('\\','/',ltrim($clsnm,'\\')));
             //类的短名称与长完整名称添加对应
 //        self::$_map[$idname] = $clsnm;
-
 
             strpos($idname,'.') !== false and $idname = str_replace('.', '/' ,$idname);
 
@@ -903,8 +764,9 @@ namespace Sharin {
             //类配置设置  覆盖优先级 $config > $full > $_convention
             $convention = $_convention;
             $full = Configger::load($clsnm,true);
-            $full   and $convention = Utils::merge($convention,$full);
-            $config and $convention = Utils::merge($convention,$config);
+//            dumpout($full,Utils::merge($convention,$full),$config);
+            $config and $convention = Utils::merge($convention,$config);//覆盖方法中传递的
+            $full   and $convention = Utils::merge($convention,$full);//外部定义的
             self::$_conventions[$clsnm] = $convention;
 
         }
@@ -934,7 +796,7 @@ namespace Sharin {
         final public static function convention(string $name='',$alternate=null){
             $clsnm = static::class;
             isset(self::$_conventions[$clsnm]) or self::$_conventions[$clsnm] = [];
-            if(empty($name)){
+            if('' === $name){
                 return self::$_conventions[$clsnm];
             }elseif(strpos($name,'.') !== false){/* ummo yule "."ao qudo lofyi xinen  */
                 $target = self::$_conventions[$clsnm];
@@ -990,9 +852,11 @@ namespace Sharin {
          */
         public static function __callStatic(string $method,array $arguments) {
             if($driver = static::instance(null) and is_callable($callable = [$driver, $method])) {
+//                dumpout($driver,$method,$arguments);
                 return call_user_func_array($callable, $arguments);
             }
-            throw new MethodNotFoundException(static::class,$method);
+            Developer::trace('MethodNotFoundException:'.static::class.' '.$method);
+            return false;
         }
     }
 
