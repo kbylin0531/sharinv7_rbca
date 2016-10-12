@@ -47,7 +47,7 @@ require __DIR__.'/Core/bundle.inc';
 //---------------------------------------- 开发模式设置 ---------------------------------------------------//
 if(SR_DEBUG_MODE_ON) {
     //开发者模式
-    error_reporting(-1);
+    error_reporting(E_ALL);
     ini_set('display_errors', 1);
 
     Developer::import('web_begin',$web_begin);
@@ -111,7 +111,7 @@ final class Sharin {
     public static function register(array $config=null){
         Behaviour::register(self::$convention['BEHAVIOUR']);
         Behaviour::listen(ON_INIT);
-        $config !== null and self::$convention = Utils::merge(self::$convention,$config);
+        $config and self::$convention = Utils::merge(self::$convention,$config);
 
         //设置初始化时期常量
         date_default_timezone_set(self::$convention['TIMEZONE_ZONE']) or die('Date default timezone set failed!');

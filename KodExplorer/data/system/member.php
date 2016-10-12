@@ -1,0 +1,1 @@
+<?php exit;?>{"admin":{"name":"admin","password":"e008cabf13d81dcf2c5f735a7c9b3ceb","role":"root","status":0},"guest":{"name":"guest","password":"e008cabf13d81dcf2c5f735a7c9b3ceb","role":"guest","status":0},"demo":{"name":"demo","password":"e008cabf13d81dcf2c5f735a7c9b3ceb","role":"default","status":0}}
