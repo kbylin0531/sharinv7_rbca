@@ -135,6 +135,8 @@ final class Sharin {
      * @throws RouteParseFailedException
      */
     public static function start(){
+        ob_end_clean();
+        ob_start();
         //执行服务端程序
         Behaviour::listen(ON_START);
         //可以执行一些安全性检查

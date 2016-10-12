@@ -8,9 +8,8 @@
  */
 
 namespace Sharin\Library;
-use Sharin\C;
 use Sharin\Component;
-
+use Sharin\Extension\Session;
 
 /**
  * Class Verify

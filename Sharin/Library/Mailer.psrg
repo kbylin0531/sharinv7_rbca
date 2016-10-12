@@ -18,9 +18,7 @@ class Mailer extends Component {
 
     public static function initializationize(array $config = null)
     {
-        parent::initializationize([
-
-        ]);
+        parent::initializationize($config);
         include SR_PATH_FRAMEWORK.'/Vendor/PHPMailer/PHPMailerAutoload.php';
     }
 
