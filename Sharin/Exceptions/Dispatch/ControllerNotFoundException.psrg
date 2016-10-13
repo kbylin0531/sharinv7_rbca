@@ -10,9 +10,16 @@
 namespace Sharin\Exceptions\Dispatch;
 
 
+use Sharin\Core\Response;
 use Sharin\Exception;
 
 class ControllerNotFoundException extends Exception
 {
+
+    public function __construct($name){
+        parent::__construct();
+        Response::sendHttpStatus(404,"controller '$name' not found ");
+        die();
+    }
 
 }

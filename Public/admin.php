@@ -11,11 +11,11 @@
 require __DIR__.'/../Sharin/web.module';
 // 应用入口文件
 const ENTRY_FILE = 'admin.php';
-const INSTALL_PATH = SR_PATH_BASE.'/Public/Public/install';
+const INSTALL_PATH = SR_PATH_BASE.'/Public/install';
 // 检测是否是新安装
 if(is_dir(INSTALL_PATH) && !file_exists(INSTALL_PATH.'/install.lock')){
     // 组装安装url
-    $url=$_SERVER['HTTP_HOST'].dirname($_SERVER['SCRIPT_NAME']).'/Public/install/index.php';
+    $url=$_SERVER['HTTP_HOST'].dirname($_SERVER['SCRIPT_NAME']).'/install/index.php';
     // 使用http://域名方式访问；避免./Public/install 路径方式的兼容性和其他出错问题
     header("Location:http://$url");
     die;

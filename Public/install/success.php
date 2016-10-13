@@ -26,7 +26,7 @@
         <div class="box agreement">
             <h2>恭喜您安装成功</h2>
             <p class="content">
-                <a href="../../index.php" target="_blank">去登录后访问后台</a><br>
+                <a href="__PUBLIC__/admin.php" target="_blank">去登录后访问后台</a><br>
                 <span class="admin_hint">默认账号：admin &emsp; 密码为：123456</span>
             </p>
         </div>
