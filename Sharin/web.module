@@ -217,4 +217,13 @@ final class Sharin {
         restore_exception_handler();
     }
 
+    /**
+     * 引入插件
+     * @param $name
+     * @return \Sharin\Addon\AddonAbstract
+     */
+    public static function addon($name){
+
+    }
+
 }

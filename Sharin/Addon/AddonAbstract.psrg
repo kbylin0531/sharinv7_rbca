@@ -1,0 +1,17 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: asus
+ * Date: 16-10-13
+ * Time: 下午2:02
+ */
+
+namespace Sharin\Addon;
+
+/**
+ * Class AddonAbstract 插件抽象类
+ * @package Sharin\Addon
+ */
+abstract class AddonAbstract {
+
+}

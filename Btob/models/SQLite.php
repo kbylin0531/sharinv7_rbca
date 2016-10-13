@@ -66,7 +66,7 @@ abstract class SQLite extends \PDO{
     }
 
     public function createMemberTable(){
-        $sql = 'create table member  (username varchar(64),passwd varchar(64),email varchar(64),phone varchar(64),cateid varchar(64),total interger)';
+        $sql = 'create table member (username varchar(64),passwd varchar(64),email varchar(64),phone varchar(64),cateid varchar(64),total interger)';
         return $this->exec($sql);
     }
 

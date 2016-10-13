@@ -2,7 +2,7 @@
 /*
 * XYHCms安装文件
 */
-@set_time_limit(1000);
+set_time_limit(1000);
 error_reporting(E_STRICT);
 define('XYHCMS_INSTALL', 1);
 header('Content-Type:text/html;charset=UTF-8');

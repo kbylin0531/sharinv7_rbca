@@ -1,4 +1,4 @@
-<?php require __DIR__.'/common/head.php';?>
+<?php require __DIR__.'/common.php';?>
 <body>
 <script>
     function testClick(){
@@ -11,7 +11,7 @@
 </script>
 <div id="nav">
     <div class="inside">
-        <p class="name">bjyblog<span>安装向导</span></p>
+        <p class="name">bjyadmin<span>安装向导</span></p>
         <ul class="schedule">
             <li class="number">1</li>
             <li class="word">使用协议</li>
@@ -69,30 +69,27 @@
                     <th width="25%">当前配置</th>
                     <th width="25%">是否符合</th>
                 </tr>
-
                 <?php
 
-                    $path_public = SR_PATH_BASE;
-                    $path_runtime = SR_PATH_BASE.'/Runtime';
-                    $path_upload = SR_PATH_BASE.'/Public/Upload';
-                    $path_install = SR_PATH_BASE.'/Public/install';
-                    $path_blog = SR_PATH_BASE.'/Blog/Common/Conf';
-
+                const BASE_DIR = SR_PATH_BASE;
+                const UPLOAD_DIR = BASE_DIR.'/Public/Upload';
+                const RUNTIME_DIR = BASE_DIR.'/Runtime';
+                const CONF_DIR = BASE_DIR.'/Admin/Common/Conf';
 
                 ?>
-
+                ?>
                 <tr>
                     <td>./</td>
                     <td>可写</td>
                     <td>
-                        <?php if (is_writable($path_public)): ?>
+                        <?php if (is_writable(BASE_DIR)): ?>
                             可写
                         <?php else: ?>
                             不可写
                         <?php endif ?>
                     </td>
-                    <td class="<?php if(is_writable($path_public)) echo 'yes'; ?>">
-                        <?php if (is_writable($path_public)): ?>
+                    <td class="<?php if(is_writable(BASE_DIR))echo 'yes'; ?>">
+                        <?php if (is_writable(BASE_DIR)): ?>
                             √
                         <?php else: ?>
                             ×
@@ -103,14 +100,14 @@
                     <td>./Upload</td>
                     <td>可写</td>
                     <td>
-                        <?php if (is_writable($path_upload)): ?>
+                        <?php if (is_writable(UPLOAD_DIR)): ?>
                             可写
                         <?php else: ?>
                             不可写
                         <?php endif ?>
                     </td>
-                    <td class="<?php if(is_writable($path_upload))echo 'yes'; ?>">
-                        <?php if (is_writable($path_upload)): ?>
+                    <td class="<?php if(is_writable(UPLOAD_DIR))echo 'yes'; ?>">
+                        <?php if (is_writable(UPLOAD_DIR)): ?>
                             √
                         <?php else: ?>
                             ×
@@ -121,14 +118,14 @@
                     <td>./Runtime</td>
                     <td>可写</td>
                     <td>
-                        <?php if (is_writable($path_runtime)): ?>
+                        <?php if (is_writable(RUNTIME_DIR)): ?>
                             可写
                         <?php else: ?>
                             不可写
                         <?php endif ?>
                     </td>
-                    <td class="<?php if(is_writable($path_runtime))echo 'yes'; ?>">
-                        <?php if (is_writable($path_runtime)): ?>
+                    <td class="<?php if(is_writable(RUNTIME_DIR))echo 'yes'; ?>">
+                        <?php if (is_writable(RUNTIME_DIR)): ?>
                             √
                         <?php else: ?>
                             ×
@@ -139,14 +136,14 @@
                     <td>./Public/install</td>
                     <td>可写</td>
                     <td>
-                        <?php if (is_writable($path_install)): ?>
+                        <?php if (is_writable(INSTALL_DIR)): ?>
                             可写
                         <?php else: ?>
                             不可写
                         <?php endif ?>
                     </td>
-                    <td class="<?php if(is_writable($path_install))echo 'yes'; ?>">
-                        <?php if (is_writable($path_install)): ?>
+                    <td class="<?php if(is_writable(INSTALL_DIR))echo 'yes'; ?>">
+                        <?php if (is_writable(INSTALL_DIR)): ?>
                             √
                         <?php else: ?>
                             ×
@@ -157,14 +154,14 @@
                     <td>./Application/Common/Conf</td>
                     <td>可写</td>
                     <td>
-                        <?php if (is_writable($path_blog)): ?>
+                        <?php if (is_writable(CONF_DIR)): ?>
                             可写
                         <?php else: ?>
                             不可写
                         <?php endif ?>
                     </td>
-                    <td class="<?php if(is_writable($path_blog))echo 'yes'; ?>">
-                        <?php if (is_writable($path_blog)): ?>
+                    <td class="<?php if(is_writable(CONF_DIR))echo 'yes'; ?>">
+                        <?php if (is_writable(CONF_DIR)): ?>
                             √
                         <?php else: ?>
                             ×

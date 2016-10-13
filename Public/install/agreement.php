@@ -1,8 +1,8 @@
-<?php require __DIR__.'/common/head.php';?>
+<?php require __DIR__.'/common.php';?>
 <body>
 <div id="nav">
     <div class="inside">
-        <p class="name">bjyblog<span>安装向导</span></p>
+        <p class="name">bjyadmin<span>安装向导</span></p>
         <ul class="schedule active">
             <li class="number">1</li>
             <li class="word">使用协议</li>
@@ -24,11 +24,11 @@
 <div id="out">
     <div class="inside">
         <div class="box agreement">
-            <h2>bjyblog V1.1 安装协议</h2>
+            <h2>bjyadmin 安装协议</h2>
             <p class="content">
-                感谢您使用bjyblog博客系统，bjyblog致力于为您创建一个简单便捷但是功能强大的博客网站。<br>
-                您在使用中有任何问题都可以登陆<a href="http://baijunyao.com" target="_blank">bjyblog官方网站</a>获取帮助。<br>
-                bjyblog遵循Apache Licence2开源协议，在尊重创作者版权的原则下您可以免费使用或再次开发。<br>
+                感谢您使用bjyadmin后台管理系统，bjyadmin是一个集成了众多工作需要用的功能。具体可以查看 <a href="http://git.oschina.net/shuaibai123/thinkphp-bjyadmin" target="_blank">README.md</a>。此安装流程页面是直接复制 <a href="http://git.oschina.net/shuaibai123/thinkbjy" target="_blank">bjyblog</a>程序的；主要是为了方便使用<br>
+                您在使用中有任何问题都可以登陆<a href="http://www.baijunyao.com" target="_blank">bjyadmin官方网站</a>获取帮助。<br>
+                bjyadmin遵循Apache Licence2开源协议，在尊重创作者版权的原则下您可以免费使用或再次开发。<br>
                 Apache Licence是著名的非盈利开源组织Apache采用的协议。该协议和BSD类似，鼓励代码共享和尊重原作者的著作权，允许代码修改，再作为开源或商业软件发布。需要满足的条件：<br>
                 1． 需要给用户一份Apache Licence ；<br>
                 2． 如果你修改了代码，需要在被修改的文件中说明；<br>

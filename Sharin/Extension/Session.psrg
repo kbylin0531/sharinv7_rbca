@@ -205,10 +205,16 @@ class Session extends Component {
      * @return bool
      */
     public static function begin(){
-        if(PHP_SESSION_ACTIVE !== session_status()){
-            return session_start();
-        }
+        self::hasStarted() or session_start();
         return true;
+    }
+
+    /**
+     * 判断Session是否开启
+     * @return bool
+     */
+    public static function hasStarted(){
+        return function_exists ( 'session_status' ) ? ( PHP_SESSION_ACTIVE == session_status () ) : ( '' === session_id () );
     }
 
     /**
@@ -299,15 +305,16 @@ class Session extends Component {
     /**
      * 获取指定名称的session的值
      * @param null|string $name 为null时获取全部session
+     * @param mixed $replacement 未找到指定的session时返回的代替值，默认为null
      * @return mixed return null if not set
      */
-    public static function get($name=null){
+    public static function get($name=null,$replacement=null){
         if(isset($name)){
             if(strpos($name,'.')){
                 list($name1,$name2) =   explode('.',$name);
-                return isset($_SESSION[$name1][$name2])?$_SESSION[$name1][$name2]:null;
+                return isset($_SESSION[$name1][$name2])?$_SESSION[$name1][$name2]:$replacement;
             }else{
-                return isset($_SESSION[$name])?$_SESSION[$name]:null;
+                return isset($_SESSION[$name])?$_SESSION[$name]:$replacement;
             }
         }
         return $_SESSION;
@@ -343,21 +350,42 @@ class Session extends Component {
      * @throws ParameterInvalidException
      */
     public static function delete($name){
-        if(is_string($name)){
-            if(strpos($name,'.')){
-                list($name1,$name2) =   explode('.',$name);
-                unset($_SESSION[$name1][$name2]);
+        if(!empty($_SESSION) and $name){
+            if(is_string($name)){
+                if(strpos($name,'.')){
+                    list($name1,$name2) =   explode('.',$name);
+                    unset($_SESSION[$name1][$name2]);
+                }else{
+                    unset($_SESSION[$name]);
+                }
+            }elseif(is_array($name)){
+                foreach($name as $val){
+                    self::delete($val);
+                }
             }else{
-                unset($_SESSION[$name]);
+                throw new ParameterInvalidException($name);
             }
-        }elseif(is_array($name)){
-            foreach($name as $val){
-                self::delete($val);
-            }
-        }else{
-            throw new ParameterInvalidException($name);
         }
-        return true;
+        return false;
+    }
+
+    /**
+     * 当上一次请求的时间间隔大于参数一的时候进行回调
+     * @param int $spacing 间隔事件，以秒计
+     * @param callable $call
+     * @return mixed
+     */
+    public static function waitOn($spacing,callable $call){
+        $lasttime = Session::get('last_request_time',false);
+        if($lasttime){
+            $time = time() - $lasttime;
+            if($time <= $spacing){
+                sleep($spacing - $time + 1);
+            }
+        }
+        $content = $call();
+        Session::set('last_request_time',time());
+        return $content;
     }
 
 }

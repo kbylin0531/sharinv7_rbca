@@ -8,8 +8,6 @@
 
 class BikudoCategory extends B2BCategory
 {
-
-
     /**
      * 获取末梢列表
      * @return array|bool

@@ -76,7 +76,7 @@ class Session {
      */
     public static function delete($name){
         self::start();
-        if(is_string($name)){
+        if(!empty($_SESSION) and is_string($name)){
             if(strpos($name,'.')){
                 list($name1,$name2) =   explode('.',$name);
                 unset($_SESSION[$name1][$name2]);

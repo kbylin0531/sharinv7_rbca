@@ -25,6 +25,11 @@ class EC21Member extends B2BMember {
         return parent::login($username);
     }
 
+    /**
+     * TODO:需要进一步的判断
+     * @param string $response
+     * @return bool
+     */
     protected function isLoginSuccess($response) {
         return strpos($response,'Set-Cookie')?true:false;
     }

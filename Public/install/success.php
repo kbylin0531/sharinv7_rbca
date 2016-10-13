@@ -1,8 +1,8 @@
-<?php require __DIR__.'/common/head.php';?>
+<?php require __DIR__.'/common.php';?>
 <body>
 <div id="nav">
     <div class="inside">
-        <p class="name">bjyblog<span>安装向导</span></p>
+        <p class="name">bjyadmin<span>安装向导</span></p>
         <ul class="schedule">
             <li class="number">1</li>
             <li class="word">使用协议</li>
@@ -26,8 +26,8 @@
         <div class="box agreement">
             <h2>恭喜您安装成功</h2>
             <p class="content">
-                <a href="../../blog.php" target="_blank">去前台首页</a><br>
-                <a href="../../blog.php/Admin/Index/index" target="_blank">去后台首页</a><span class="admin_hint">后台默认密码为：admin</span>
+                <a href="../../index.php" target="_blank">去登录后访问后台</a><br>
+                <span class="admin_hint">默认账号：admin &emsp; 密码为：123456</span>
             </p>
         </div>
     </div>

@@ -13,7 +13,6 @@ namespace Behavior;
 /**
  * 自动执行任务
  */
-use Think\Log as Log;
 class CronRunBehavior
 {
 

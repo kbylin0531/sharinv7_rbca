@@ -3,16 +3,13 @@
  * 安装向导
  */
 header('Content-type:text/html;charset=utf-8');
-
-require __DIR__.'/../../Sharin/web.module';
-
-define('INSTALL_DIR',SR_PATH_BASE.'/Public/install/');
-
+require __DIR__.'/../../../Sharin/web.module';
 // 检测是否安装过
-if (file_exists(INSTALL_DIR.'install.lock')) {
+if (file_exists(__DIR__.'/install.lock')) {
     echo '你已经安装过该系统，重新安装需要先删除./Public/install/install.lock 文件';
     die;
 }
+const INSTALL_DIR = __DIR__.'/';
 // 同意协议页面
 if(@!isset($_GET['c']) || @$_GET['c']=='agreement'){
     require INSTALL_DIR.'agreement.php';
@@ -49,8 +46,8 @@ if(@$_GET['c']=='success'){
             $link->select_db($data['DB_NAME']);
         }
         // 导入sql数据并创建表
-        $bjyblog_str=file_get_contents('./bjyblog.sql');
-        $sql_array=preg_split("/;[\r\n]+/", str_replace('bjy_',$data['DB_PREFIX'],$bjyblog_str));
+        $bjyadmin_str=file_get_contents('bjyadmin.sql');
+        $sql_array=preg_split("/;[\r\n]+/", str_replace('bjyadmin_',$data['DB_PREFIX'],$bjyadmin_str));
         foreach ($sql_array as $k => $v) {
             if (!empty($v)) {
                 $link->query($v);
@@ -72,8 +69,8 @@ return array(
 );
 php;
         // 创建数据库链接配置文件
-        file_put_contents(SR_PATH_BASE.'/Blog/Common/Conf/db.php', $db_str);
-        @touch( INSTALL_DIR.'install.lock');
+        file_put_contents(SR_PATH_BASE.'/Admin/Common/Conf/db.php', $db_str);
+        @touch(INSTALL_DIR.'install.lock');
         require INSTALL_DIR.'success.php';
     }
 

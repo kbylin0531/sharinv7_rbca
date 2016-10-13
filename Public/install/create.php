@@ -1,8 +1,8 @@
-<?php require __DIR__.'/common/head.php';?>
+<?php require __DIR__.'/common.php';?>
 <body>
 <div id="nav">
     <div class="inside">
-        <p class="name">bjyblog<span>安装向导</span></p>
+        <p class="name">bjyadmin<span>安装向导</span></p>
         <ul class="schedule">
             <li class="number">1</li>
             <li class="word">使用协议</li>
@@ -28,7 +28,7 @@
                 <h2>数据库信息</h2>
                 <div class="one">
                     <label class="control-label">数据库类型</label>
-                    <input class="form-control" type="text" name="DB_TYPE" value="mysqli" disabled="disabled">
+                    <input class="form-control" type="text" name="DB_TYPE" value="mysql" disabled="disabled">
                 </div>
                 <div class="one">
                     <label class="control-label"> 数据库服务器</label>
@@ -52,7 +52,7 @@
                 </div>
                 <div class="one">
                     <label class="control-label"> 数据表前缀</label>
-                    <input class="form-control" type="text" name="DB_PREFIX" value="bjy_">
+                    <input class="form-control" type="text" name="DB_PREFIX" value="bjyadmin_">
                 </div>
                 <p class="agree">
                     <a class="btn btn-primary" href="./index.php?c=test">上一步</a>
