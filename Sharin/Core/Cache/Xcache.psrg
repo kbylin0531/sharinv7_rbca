@@ -13,36 +13,12 @@ namespace Sharin\Core\Cache;
  * Xcache缓存驱动
  * @author    liu21st <liu21st@gmail.com>
  */
-class Xcache implements CacheInterface {
+class Xcache implements CacheInterface
+{
     protected $options = [
         'prefix' => '',
         'expire' => 0,
     ];
-
-    /**
-     * 删除缓存
-     * @access public
-     * @param string $name 缓存变量名
-     * @return boolean
-     */
-    public function delete($name)
-    {
-        return xcache_unset($this->options['prefix'] . $name);
-    }
-
-    /**
-     * 清除缓存
-     * @access public
-     * @return boolean
-     */
-    public function clean()
-    {
-        if (function_exists('xcache_unset_by_prefix')) {
-            return xcache_unset_by_prefix($this->options['prefix']);
-        } else {
-            return false;
-        }
-    }
 
     /**
      * 架构函数
@@ -68,8 +44,8 @@ class Xcache implements CacheInterface {
      */
     public function has($name)
     {
-        $name = $this->options['prefix'] . $name;
-        return xcache_isset($name);
+        $key = $this->getCacheKey($name);
+        return xcache_isset($key);
     }
 
     /**
@@ -81,8 +57,8 @@ class Xcache implements CacheInterface {
      */
     public function get($name, $default = false)
     {
-        $name = $this->options['prefix'] . $name;
-        return xcache_isset($name) ? xcache_get($name) : $default;
+        $key = $this->getCacheKey($name);
+        return xcache_isset($key) ? xcache_get($key) : $default;
     }
 
     /**
@@ -98,8 +74,12 @@ class Xcache implements CacheInterface {
         if (is_null($expire)) {
             $expire = $this->options['expire'];
         }
-        $name = $this->options['prefix'] . $name;
-        if (xcache_set($name, $value, $expire)) {
+        if ($this->tag && !$this->has($name)) {
+            $first = true;
+        }
+        $key = $this->getCacheKey($name);
+        if (xcache_set($key, $value, $expire)) {
+            isset($first) && $this->setTagItem($key);
             return true;
         }
         return false;
@@ -114,7 +94,8 @@ class Xcache implements CacheInterface {
      */
     public function inc($name, $step = 1)
     {
-        return xcache_inc($name, $step);
+        $key = $this->getCacheKey($name);
+        return xcache_inc($key, $step);
     }
 
     /**
@@ -126,7 +107,42 @@ class Xcache implements CacheInterface {
      */
     public function dec($name, $step = 1)
     {
-        return xcache_dec($name, $step);
+        $key = $this->getCacheKey($name);
+        return xcache_dec($key, $step);
     }
 
+    /**
+     * 删除缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @return boolean
+     */
+    public function rm($name)
+    {
+        return xcache_unset($this->getCacheKey($name));
+    }
+
+    /**
+     * 清除缓存
+     * @access public
+     * @param string $tag 标签名
+     * @return boolean
+     */
+    public function clear($tag = null)
+    {
+        if ($tag) {
+            // 指定标签清除
+            $keys = $this->getTagItem($tag);
+            foreach ($keys as $key) {
+                xcache_unset($key);
+            }
+            $this->rm('tag_' . md5($tag));
+            return true;
+        }
+        if (function_exists('xcache_unset_by_prefix')) {
+            return xcache_unset_by_prefix($this->options['prefix']);
+        } else {
+            return false;
+        }
+    }
 }
