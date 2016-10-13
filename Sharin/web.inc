@@ -1,4 +1,7 @@
 <?php
+/**
+ *
+ */
 use Sharin\ClassLoader;
 use Sharin\Utils;
 use Sharin\Behaviour;
@@ -11,7 +14,6 @@ use Sharin\Core\ExceptionHandler;
 use Sharin\Exceptions\ParameterInvalidException;
 use Sharin\Exceptions\RouteParseFailedException;
 use Sharin\Behaviour\HtmlCache;
-
 //---------------------------------------- 获取开始运行时状态 ------------------------------------------------//
 $web_begin = [
     $_SERVER['REQUEST_TIME_FLOAT'],
@@ -33,12 +35,15 @@ defined('SR_PATH_APP')  or define('SR_PATH_APP',SR_PATH_BASE.'/'.SR_APP_NAME);
 //请求方法
 const SR_IS_POST = SR_REQUEST_METHOD === 'POST';
 const SR_HTTP_PREFIX = SR_IS_HTTPS ? 'https://' : 'http://' ;
+define('SCRIPT_DIR',dirname($_SERVER['SCRIPT_NAME']));
+define('REQUESR_FILE',$_SERVER['REQUEST_URI']);
 //公共URL
 define('SR_PUBLIC_URL',SR_HTTP_PREFIX.$_SERVER['SERVER_NAME'].
-    (
-        (80 == $_SERVER['SERVER_PORT'])?
-            dirname($_SERVER['SCRIPT_NAME']) :
-            ":{$_SERVER['SERVER_PORT']}".dirname($_SERVER['SCRIPT_NAME']))
+        (
+            (80 == $_SERVER['SERVER_PORT'])?
+                dirname($_SERVER['SCRIPT_NAME']) :
+                ":{$_SERVER['SERVER_PORT']}".SCRIPT_DIR
+        )
     );
 
 //---------------------------------------- 加载类包 -------------------------------------------------------//

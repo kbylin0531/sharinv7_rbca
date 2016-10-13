@@ -11,6 +11,7 @@
   
 二、测试代码
 src/Money.php
+
     <?php
     class Money
     {
@@ -20,17 +21,14 @@ src/Money.php
         {
             $this->amount = $amount;
         }
-    
         public function getAmount()
         {
             return $this->amount;
         }
-    
         public function negate()
         {
             return new Money(-1 * $this->amount);
         }
-    
         // ...
     }
     ?>

@@ -12,6 +12,7 @@ use PDOException;
 use PDOStatement;
 use Sharin\Component;
 use Sharin\Core;
+use Sharin\Core\SEK;
 use Sharin\Exception as Exception;
 
 /**

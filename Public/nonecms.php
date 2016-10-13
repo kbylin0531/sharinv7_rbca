@@ -10,7 +10,7 @@
 // +----------------------------------------------------------------------
 
 // [ 应用入口文件 ]
-require __DIR__.'/../../Sharin/web.module';
+require __DIR__.'/../../Sharin/web.inc';
 // 定义应用目录
 define('APP_PATH', SR_PATH_BASE . '/NoneCMS/');
 if(!file_exists(APP_PATH.'database.php')){

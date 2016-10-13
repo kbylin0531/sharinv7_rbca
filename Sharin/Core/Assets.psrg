@@ -1,0 +1,28 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: asus
+ * Date: 16-10-13
+ * Time: 下午4:50
+ */
+
+namespace Sharin\Core;
+
+use Sharin\Developer;
+
+/**
+ * Class Assets 资源处理类
+ * URL中访问了不存在的资源会进入该类下进行处理
+ * @package Sharin\Core
+ */
+class Assets {
+
+    public static function assert(){
+
+        \Sharin\dumpout($_SERVER);
+
+        Developer::closeTrace();
+        die('hello ');
+    }
+
+}

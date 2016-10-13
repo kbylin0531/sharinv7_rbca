@@ -3,7 +3,7 @@
  * 安装向导
  */
 header('Content-type:text/html;charset=utf-8');
-require __DIR__.'/../../Sharin/web.module';
+require __DIR__.'/../../Sharin/web.inc';
 const INSTALL_DIR = __DIR__.'/';
 // 检测是否安装过
 if (file_exists(INSTALL_DIR.'install.lock')) {

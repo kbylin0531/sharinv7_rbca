@@ -8,7 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-require __DIR__.'/../Sharin/web.module';
+require __DIR__.'/../Sharin/web.inc';
 // 应用入口文件
 const ENTRY_FILE = 'admin.php';
 const INSTALL_PATH = SR_PATH_BASE.'/Public/install';

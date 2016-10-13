@@ -1,5 +1,5 @@
 <?php
-require __DIR__.'/../Sharin/web.module';
+require __DIR__.'/../Sharin/web.inc';
 // change the following paths if necessary
 define('YII_PATH_BASE',__DIR__.'/');
 $yii=SR_PATH_BASE.'/Vendor/yii117/framework/yii.php';
