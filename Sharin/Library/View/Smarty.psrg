@@ -7,7 +7,7 @@
  * Time: 11:33 AM
  */
 
-namespace Sharin\Extension\View;
+namespace Sharin\Library\View;
 use Sharin\Developer;
 use Sharin\Exception as Exception;
 

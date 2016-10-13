@@ -12,12 +12,24 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
+// Date.timezone
+if (!ini_get('date.timezone')) {
+    date_default_timezone_set('Asia/Shanghai');
+}
+// Display errors.
+ini_set('display_errors', 'on');
+// Reporting all.
+error_reporting(E_ALL);
+
 // For onError callback.
-const WORKERMAN_CONNECT_FAIL = 1;
+define('WORKERMAN_CONNECT_FAIL', 1);
 // For onError callback.
-const WORKERMAN_SEND_FAIL = 2;
+define('WORKERMAN_SEND_FAIL', 2);
 
 // Compatible with php7
-if(!class_exists('Error')) {
-    include_once SR_PATH_FRAMEWORK.'/Library/Error.class.php';
+if(!class_exists('Error'))
+{
+    class Error extends Exception
+    {
+    }
 }

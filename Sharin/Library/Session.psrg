@@ -1,5 +1,5 @@
 <?php
-namespace Sharin\Extension;
+namespace Sharin\Library;
 use Sharin\Component;
 use Sharin\Exceptions\ParameterInvalidException;
 use SessionHandlerInterface;

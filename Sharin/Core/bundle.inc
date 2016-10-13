@@ -8,7 +8,7 @@ use Sharin\Core\Storage;
 use Sharin\Exceptions\ConfigParseFailedException;
 use Sharin\Library\Helper\Ini;
 use Sharin\Library\Helper\XMLer;
-use Sharin\Extension\Trace;
+use Sharin\Library\Trace;
 use Sharin\Exceptions\MethodNotFoundException;
 use Sharin\Exceptions\ParameterInvalidException;
 

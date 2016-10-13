@@ -12,7 +12,7 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace Workerman;
-use Workerman\Connection\TcpConnection;
+
 use Workerman\Protocols\Http;
 use Workerman\Protocols\HttpCache;
 
@@ -209,7 +209,11 @@ class WebServer extends Worker
                 }
                 $content = ob_get_clean();
                 ini_set('display_errors', 'on');
-                $connection->close($content);
+                if (strtolower($_SERVER['HTTP_CONNECTION']) === "keep-alive") {
+                    $connection->send($content);
+                } else {
+                    $connection->close($content);
+                }
                 chdir($workerman_cwd);
                 return;
             }
@@ -224,12 +228,8 @@ class WebServer extends Worker
         }
     }
 
-    /**
-     * @param TcpConnection $connection
-     * @param $file_path
-     * @return mixed
-     */
-    public static function sendFile($connection, $file_path) {
+    public static function sendFile($connection, $file_path)
+    {
         // Check 304.
         $info = stat($file_path);
         $modified_time = $info ? date('D, d M Y H:i:s', $info['mtime']) . ' GMT' : '';
@@ -270,24 +270,29 @@ class WebServer extends Worker
 
         // Read file content from disk piece by piece and send to client.
         $connection->fileHandler = fopen($file_path, 'r');
-        $do_write = function()use($connection) {
+        $do_write = function()use($connection)
+        {
             // Send buffer not full.
-            while(empty($connection->bufferFull)) {
+            while(empty($connection->bufferFull))
+            {
                 // Read from disk.
                 $buffer = fread($connection->fileHandler, 8192);
                 // Read eof.
-                if($buffer === '' || $buffer === false) {
+                if($buffer === '' || $buffer === false)
+                {
                     return;
                 }
                 $connection->send($buffer, true);
             }
         };
         // Send buffer full.
-        $connection->onBufferFull = function($connection) {
+        $connection->onBufferFull = function($connection)
+        {
             $connection->bufferFull = true;
         };
         // Send buffer drain.
-        $connection->onBufferDrain = function($connection)use($do_write) {
+        $connection->onBufferDrain = function($connection)use($do_write)
+        {
             $connection->bufferFull = false;
             $do_write();
         };

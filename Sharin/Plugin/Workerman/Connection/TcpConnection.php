@@ -15,7 +15,8 @@ namespace Workerman\Connection;
 
 use Workerman\Events\EventInterface;
 use Workerman\Worker;
-use Error as E;
+use Exception;
+
 /**
  * TcpConnection.
  */
@@ -211,7 +212,8 @@ class TcpConnection extends ConnectionInterface
      * @param resource $socket
      * @param string   $remote_address
      */
-    public function __construct($socket, $remote_address = '') {
+    public function __construct($socket, $remote_address = '')
+    {
         self::$statistics['connection_count']++;
         $this->id      = $this->_id = self::$_idRecorder++;
         $this->_socket = $socket;
@@ -643,7 +645,8 @@ class TcpConnection extends ConnectionInterface
      *
      * @return void
      */
-    public function __destruct() {
+    public function __destruct()
+    {
         self::$statistics['connection_count']--;
     }
 }

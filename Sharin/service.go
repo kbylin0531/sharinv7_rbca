@@ -1,57 +1,5 @@
+#!/usr/bin/env php
 <?php
-namespace Workerman {
-    /**
-     * Class Autoloader
-     * Workerman的自动加载器
-     * @package Workerman
-     */
-    class Autoloader {
-
-        /**
-         * Autoload root path.
-         *
-         * @var string
-         */
-        protected static $_autoloadRootPath = '';
-
-        /**
-         * Set autoload root path.
-         *
-         * @param string $root_path
-         * @return void
-         */
-        public static function setRootPath($root_path)
-        {
-            self::$_autoloadRootPath = $root_path;
-        }
-
-        /**
-         * Load files by namespace.
-         *
-         * @param string $name
-         * @return boolean
-         */
-        public static function loadByNamespace($name) {
-            $class_path = str_replace('\\', DIRECTORY_SEPARATOR, $name);
-            if (strpos($class_path, 'Workerman/') < 2 or strpos($class_path, 'GatewayWorker/') < 2) {
-                $class_file = SR_PATH_PLUGIN.DIRECTORY_SEPARATOR.$class_path.'.php';
-            } elseif(self::$_autoloadRootPath) {
-                $class_file = self::$_autoloadRootPath . DIRECTORY_SEPARATOR . $class_path . '.php';
-            }else{
-                return false;
-            }
-
-            if (is_file($class_file)) {
-                include $class_file;
-                if (class_exists($name, false)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-}
-
 namespace {
 
     use Workerman\Autoloader;
@@ -59,8 +7,8 @@ namespace {
     use Workerman\WebServer;
 
     require __DIR__.'/Common/constant.inc';
-    require __DIR__.'/Core/bundle.inc';
-    require __DIR__.'/Common/environment.inc';
+    require __DIR__.'/Common/debug_suit.inc';
+    require __DIR__.'/Plugin/Workerman/Autoloader.php';
 
     //error  display
     if(SR_DEBUG_MODE_ON){
@@ -153,7 +101,7 @@ namespace {
             }
             $error = '';
             // 检查扩展
-            if(!extension_loaded('pcntl'))  $error = "Please install pcntl extension. See http://doc3.workerman.net/install/install.html\n";
+            if(!extension_loaded('pcntl')) $error = "Please install pcntl extension. See http://doc3.workerman.net/install/install.html\n";
             if(!extension_loaded('posix')) $error = "Please install posix extension. See http://doc3.workerman.net/install/install.html\n";
             return $error;
         }
@@ -163,7 +111,7 @@ namespace {
     //开启脚本
     $appname = Service::arg(1);
     if(!$appname){
-        die("Please run as 'php service.php [APPLICATION_NAME] [ACTION_NAME]'!\n");
+        die("Please run as 'service.go [APPLICATION_NAME] [ACTION_NAME]'!\n");
     }
     define('SR_APP_NAME', ucfirst($appname));
     define('SR_PATH_APP', SR_PATH_SERVICE.DIRECTORY_SEPARATOR.SR_APP_NAME);

@@ -9,7 +9,6 @@
 
 namespace Sharin\Library;
 use Sharin\Component;
-use Sharin\Extension\Session;
 
 /**
  * Class Verify

@@ -1,5 +1,1 @@
-# 可以将该文件拷贝到上级目录
-# 为了避免该目录下文健被当作文本文件访问
-# nginx 的rewrite规则可能稍有不同
-order allow,deny
 deny from all

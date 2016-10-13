@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Created by PhpStorm.
  * User: linzh
@@ -7,8 +6,7 @@
  * Time: 20:12
  */
 namespace Web\Home\Controller;
-
-use Sharin\Extension\Controller;
+use Sharin\Library\Controller;
 
 class Index extends Controller {
 

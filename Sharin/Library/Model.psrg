@@ -1,11 +1,11 @@
 <?php
-namespace Sharin\Extension ;
+namespace Sharin\Library ;
 use Sharin\Exception as Exception;
 use Sharin\Utils;
 
 /**
  * Class Model 模型基类
- * @package Sharin\Extension
+ * @package Sharin\Library
  */
 class Model {
 

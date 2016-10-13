@@ -6,7 +6,7 @@
  * Date: 8/22/16
  * Time: 11:05 AM
  */
-namespace Sharin\Extension;
+namespace Sharin\Library;
 use PDO;
 use PDOException;
 use PDOStatement;

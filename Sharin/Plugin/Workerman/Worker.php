@@ -26,7 +26,8 @@ use Exception;
  * Worker class
  * A container for listening ports
  */
-class Worker {
+class Worker
+{
     /**
      * Version.
      *
@@ -424,60 +425,45 @@ class Worker {
 
     /**
      * Check sapi.
-     * Only for cli. php_sapi_name()
+     *
      * @return void
      */
-    protected static function checkSapiEnv() {
-        if (PHP_SAPI != "cli")  die("only run in command line mode \n");
+    protected static function checkSapiEnv()
+    {
+        // Only for cli.
+        if (php_sapi_name() != "cli") {
+            exit("only run in command line mode \n");
+        }
     }
 
-    /**
-     * 检查文件如果文件不存在则创建一个空的文件，并且解决上层目录的问题
-     * @param string $file 文件路径
-     * @return bool
-     * @throws \Exception 无权限时抛出异常
-     */
-    protected static function touch($file){
-        $dir = dirname($file);
-        if(!is_dir($dir)){
-            if(!mkdir($dir,0777,true)){
-                throw new \Exception("创建目录失败'$dir'!");
-            }
-        }
-        if(!is_writable($dir)){
-            if(!chmod($dir,0777)){
-                throw new \Exception("修改目录权限失败'$dir'!");
-            }
-        }
-        return touch($file);
-    }
     /**
      * Init.
      *
      * @return void
      */
-    protected static function init() {
+    protected static function init()
+    {
         // Start file.
         $backtrace        = debug_backtrace();
         self::$_startFile = $backtrace[count($backtrace) - 1]['file'];
 
-        $time = time();
-        $datetime = date('Y-m-d',$time);//开启日期
         // Pid file.
-        self::$pidFile or self::$pidFile = SR_PATH_RUNTIME . '/Workman/Pid/' . str_replace('/', '_', self::$_startFile) . '.pid';
+        if (empty(self::$pidFile)) {
+            self::$pidFile = __DIR__ . "/../" . str_replace('/', '_', self::$_startFile) . ".pid";
+        }
 
         // Log file.
         if (empty(self::$logFile)) {
-            self::$logFile = SR_PATH_RUNTIME . '/Workman/Log/'.$datetime.'.log';
+            self::$logFile = __DIR__ . '/../workerman.log';
         }
-        self::touch(self::$logFile);
+        touch(self::$logFile);
         chmod(self::$logFile, 0622);
 
         // State.
         self::$_status = self::STATUS_STARTING;
 
         // For statistics.
-        self::$_globalStatistics['start_timestamp'] = $time;
+        self::$_globalStatistics['start_timestamp'] = time();
         self::$_statisticsFile                      = sys_get_temp_dir() . '/workerman.status';
 
         // Process title.
@@ -601,7 +587,7 @@ class Worker {
         // Check argv;
         $start_file = $argv[0];
         if (!isset($argv[1])) {
-            exit("Usage: php yourfile.php {start|stop|restart|reload|status|kill}\n");
+            exit("Usage: php yourfile.php {start|stop|restart|reload|status}\n");
         }
 
         // Get command.
@@ -628,18 +614,13 @@ class Worker {
                 self::log("Workerman[$start_file] already running");
                 exit;
             }
-        } elseif ($command !== 'start' && $command !== 'restart' && $command !== 'kill') {
+        } elseif ($command !== 'start' && $command !== 'restart') {
             self::log("Workerman[$start_file] not run");
             exit;
         }
 
         // execute command.
         switch ($command) {
-            case 'kill':
-                exec("ps aux | grep $start_file | grep -v grep | awk '{print $2}' |xargs kill -SIGINT");
-                usleep(100000);
-                exec("ps aux | grep $start_file | grep -v grep | awk '{print $2}' |xargs kill -SIGKILL");
-                break;
             case 'start':
                 if ($command2 === '-d') {
                     Worker::$daemonize = true;
@@ -652,7 +633,7 @@ class Worker {
                 // Master process will send status signal to all child processes.
                 posix_kill($master_pid, SIGUSR2);
                 // Waiting amoment.
-                usleep(100000);
+                usleep(500000);
                 // Display statisitcs data from a disk file.
                 @readfile(self::$_statisticsFile);
                 exit(0);
@@ -693,7 +674,7 @@ class Worker {
                 self::log("Workerman[$start_file] reload");
                 exit;
             default :
-                exit("Usage: php yourfile.php {start|stop|restart|reload|status|kill}\n");
+                exit("Usage: php yourfile.php {start|stop|restart|reload|status}\n");
         }
     }
 
@@ -702,13 +683,14 @@ class Worker {
      *
      * @return void
      */
-    protected static function installSignal() {
+    protected static function installSignal()
+    {
         // stop
-        pcntl_signal(SIGINT, array('Workerman\Worker', 'signalHandler'), false);
+        pcntl_signal(SIGINT, array('\Workerman\Worker', 'signalHandler'), false);
         // reload
-        pcntl_signal(SIGUSR1, array('Workerman\Worker', 'signalHandler'), false);
+        pcntl_signal(SIGUSR1, array('\Workerman\Worker', 'signalHandler'), false);
         // status
-        pcntl_signal(SIGUSR2, array('Workerman\Worker', 'signalHandler'), false);
+        pcntl_signal(SIGUSR2, array('\Workerman\Worker', 'signalHandler'), false);
         // ignore
         pcntl_signal(SIGPIPE, SIG_IGN, false);
     }
@@ -718,7 +700,8 @@ class Worker {
      *
      * @return void
      */
-    protected static function reinstallSignal() {
+    protected static function reinstallSignal()
+    {
         // uninstall stop signal handler
         pcntl_signal(SIGINT, SIG_IGN, false);
         // uninstall reload signal handler
@@ -738,7 +721,8 @@ class Worker {
      *
      * @param int $signal
      */
-    public static function signalHandler($signal) {
+    public static function signalHandler($signal)
+    {
         switch ($signal) {
             // Stop.
             case SIGINT:
@@ -816,7 +800,6 @@ class Worker {
     protected static function saveMasterPid()
     {
         self::$_masterPid = posix_getpid();
-        self::touch(self::$pidFile);
         if (false === @file_put_contents(self::$pidFile, self::$_masterPid)) {
             throw new Exception('can not save pid to ' . self::$pidFile);
         }
@@ -845,7 +828,7 @@ class Worker {
      */
     protected static function getAllWorkerPids()
     {
-        $pid_array = [];
+        $pid_array = array();
         foreach (self::$_pidMap as $worker_pid_array) {
             foreach ($worker_pid_array as $worker_pid) {
                 $pid_array[$worker_pid] = $worker_pid;
@@ -863,7 +846,9 @@ class Worker {
     {
         foreach (self::$_workers as $worker) {
             if (self::$_status === self::STATUS_STARTING) {
-                empty($worker->name) and $worker->name = $worker->getSocketName();
+                if (empty($worker->name)) {
+                    $worker->name = $worker->getSocketName();
+                }
                 $worker_name_length = strlen($worker->name);
                 if (self::$_maxWorkerNameLength < $worker_name_length) {
                     self::$_maxWorkerNameLength = $worker_name_length;
@@ -878,10 +863,12 @@ class Worker {
 
     /**
      * Fork one worker process.
+     *
      * @param Worker $worker
      * @throws Exception
      */
-    protected static function forkOneWorker($worker) {
+    protected static function forkOneWorker($worker)
+    {
         $pid = pcntl_fork();
         // Get available worker id.
         $id = self::getId($worker->workerId, 0);
@@ -915,7 +902,6 @@ class Worker {
      *
      * @param int $worker_id
      * @param int $pid
-     * @return mixed
      */
     protected static function getId($worker_id, $pid)
     {
@@ -1216,15 +1202,15 @@ class Worker {
         // For child processes.
         /** @var Worker $worker */
         $worker           = current(self::$_workers);
-        $wrker_status_str = posix_getpid() . "\t" . str_pad(round(memory_get_usage(true) / (1024 * 1024), 2) . "M",
+        $worker_status_str = posix_getpid() . "\t" . str_pad(round(memory_get_usage(true) / (1024 * 1024), 2) . "M",
                 7) . " " . str_pad($worker->getSocketName(),
                 self::$_maxSocketNameLength) . " " . str_pad(($worker->name === $worker->getSocketName() ? 'none' : $worker->name),
                 self::$_maxWorkerNameLength) . " ";
-        $wrker_status_str .= str_pad(ConnectionInterface::$statistics['connection_count'],
+        $worker_status_str .= str_pad(ConnectionInterface::$statistics['connection_count'],
                 11) . " " . str_pad(ConnectionInterface::$statistics['total_request'],
                 14) . " " . str_pad(ConnectionInterface::$statistics['send_fail'],
                 9) . " " . str_pad(ConnectionInterface::$statistics['throw_exception'], 15) . "\n";
-        file_put_contents(self::$_statisticsFile, $wrker_status_str, FILE_APPEND);
+        file_put_contents(self::$_statisticsFile, $worker_status_str, FILE_APPEND);
     }
 
     /**
@@ -1562,6 +1548,9 @@ class Worker {
             if ($this->protocol) {
                 $parser      = $this->protocol;
                 $recv_buffer = $parser::decode($recv_buffer, $connection);
+                // Discard bad packets.
+                if ($recv_buffer === false)
+                    return true;
             }
             ConnectionInterface::$statistics['total_request']++;
             try {
