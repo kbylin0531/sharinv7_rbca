@@ -301,7 +301,7 @@ class Think implements ViewInterface {
             return $parseStr;
         }, $tmplContent);
         // 添加安全代码
-        $tmplContent =  '<?php if (!defined(\'SR_APP_NAME\')) exit(\'No Permission!\');?>'.$tmplContent;
+        $tmplContent =  '<?php if (!defined(\'SR_VERSION\')) exit(\'No Permission!\');?>'.$tmplContent;
         // 优化生成的php代码
         $tmplContent = str_replace('?><?php','',$tmplContent);
         //替换模板中的字符串

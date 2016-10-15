@@ -8,21 +8,61 @@
 
 namespace Sharin\Core;
 
+use Sharin\Component;
 use Sharin\Developer;
 
 /**
  * Class Assets 资源处理类
- * URL中访问了不存在的资源会进入该类下进行处理
+ * URL中访问了不存在的资源(模块、控制器、方法等因素不存在导致的)会进入该类下进行处理
  * @package Sharin\Core
  */
-class Assets {
+class Assets extends Component {
 
-    public static function assert(){
+    protected static $name = 'assets';
 
-        \Sharin\dumpout($_SERVER);
+    public static function initializationize(array $config = null) {
+        parent::initializationize([
+            'rules' => [],
+        ]);
+        self::$rules = self::convention('rules',[]);
+    }
 
-        Developer::closeTrace();
-        die('hello ');
+    protected static $rules = [];
+
+    protected static function handleRule(string $assets) : string
+    {
+        if(isset(self::$rules[$assets])){
+            $rule = self::$rules[$assets];
+            switch (gettype($rule)) {
+                case TYPE_STR:
+                case TYPE_ARRAY:
+                    if(is_callable($rule)){
+                        return $rule($assets);
+                    }
+
+                    break;
+
+            }
+        }
+        return $assets;
+    }
+
+    /**
+     * 解析资源名称
+     * @param array $context 上下文环境
+     * @return void
+     */
+    public static function parse(array $context=null) : void
+    {
+        //获取访问的资源名称
+        $asset = substr(trim($_SERVER['REQUEST_URI'],'/ '),strlen(trim(SR_SCRIPT_DIR,'/ ')));
+        if(($context = self::handleRule($context)) !== false){
+            \Sharin\dumpout($context,$asset);
+        }else{
+            Response::sendHttpStatus(404,"Resource '$asset' Not Found");
+            Developer::closeTrace();
+            die();
+        }
     }
 
 }

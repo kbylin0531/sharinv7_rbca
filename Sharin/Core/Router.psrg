@@ -125,6 +125,7 @@ class Router extends Component {
             //普通模式下解析URI地址
             self::parseInCommon($uri);
         }
+
         return self::$result;
     }
 
@@ -446,6 +447,8 @@ class Router extends Component {
      * 直接访问：
      *  http://www.xor.com:8056/                => '/'
      *  http://localhost:8056/_xor/             => '/_xor/'  ****** BUG *******
+     * 这样的网址是无法获取PATH_INFO的 http://192.168.100.170//sharinv7/Public/index.php
+     *
      * @param bool $reget 是否重新获取，默认为false
      * @return null|string
      */
@@ -456,6 +459,11 @@ class Router extends Component {
                 //如果设置了PATH_INFO则直接获取之
                 $uri = $_SERVER['PATH_INFO'];
             }else{
+                //容错适应
+//                if(strpos($_SERVER['REQUEST_URI'],'//') === 0){
+//                    $_SERVER['SCRIPT_NAME'] = str_replace('//','/',$_SERVER['SCRIPT_NAME']);
+//                    $_SERVER['REQUEST_URI'] = str_replace('//','/',$_SERVER['REQUEST_URI']);
+//                }
                 $scriptlen = strlen($_SERVER['SCRIPT_NAME']);
                 if(strlen($_SERVER['REQUEST_URI']) > $scriptlen){
                     $pos = strpos($_SERVER['REQUEST_URI'],$_SERVER['SCRIPT_NAME']);

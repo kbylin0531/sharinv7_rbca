@@ -64,7 +64,7 @@ class View extends Component {
      * @return array 类型由参数三决定
      */
     public static function parseTemplatePath($context){
-        $path = SR_PATH_BASE.'/'.SR_APP_NAME."/{$context['m']}/View/{$context['c']}/";
+        $path = SR_PATH_BASE."/Application/{$context['m']}/View/{$context['c']}/";
         isset($context['t']) and $path = "{$path}{$context['t']}/";
         $path = "{$path}{$context['a']}";
         return $path;

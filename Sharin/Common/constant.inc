@@ -2,6 +2,7 @@
 /**
  * 无论是客户端模式还是web模式通用的常量定义在此文件中
  */
+const SR_VERSION        = 0;
 const SHARIN_VERSION    = 1;
 //Component类的重要属性
 const BASE_ON_DRIVER        = 'BASE_ON_DRIVER';
@@ -41,14 +42,15 @@ defined('SR_DEBUG_MODE_ON') or define('SR_DEBUG_MODE_ON', true);//可以提高�
 defined('SR_OS_ENCODING')   or define('SR_OS_ENCODING','UTF-8');//系统编码
 
 //目录常量
-define('SR_PATH_BASE', dirname(dirname(__DIR__)));
-const SR_PATH_FRAMEWORK = SR_PATH_BASE.'/Sharin';
-const SR_PATH_CONFIG    = SR_PATH_BASE.'/Config';//global config
-const SR_PATH_RUNTIME   = SR_PATH_BASE.'/Runtime';
-const SR_PATH_PUBLIC    = SR_PATH_BASE.'/Public';
-const SR_PATH_SERVICE   = SR_PATH_BASE.'/Service';
-const SR_PATH_DATA      = SR_PATH_BASE.'/Data';
-const SR_PATH_PLUGIN    = SR_PATH_FRAMEWORK.'/Plugins';
+define('SR_PATH_BASE', dirname(dirname(__DIR__)).'/');
+const SR_PATH_FRAMEWORK = SR_PATH_BASE.'Sharin/';
+const SR_PATH_CONFIG    = SR_PATH_BASE.'Config/';//global config
+const SR_PATH_RUNTIME   = SR_PATH_BASE.'Runtime/';
+const SR_PATH_PUBLIC    = SR_PATH_BASE.'Public/';
+const SR_PATH_SERVICE   = SR_PATH_BASE.'Service/';
+const SR_PATH_DATA      = SR_PATH_BASE.'Data/';
+const SR_PATH_PLUGIN    = SR_PATH_FRAMEWORK.'Plugins/';
+const SR_PATH_APP       = SR_PATH_BASE.'Application/';
 
 //------------------------- 应用生命周期内的各个阶段 --------------------------------------//
 const ON_INIT       = 'onInit';

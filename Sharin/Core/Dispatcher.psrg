@@ -153,11 +153,13 @@ class Dispatcher extends Component {
         $modulepath = SR_PATH_APP."/{$modules}";//linux 不识别
         strpos($modules,'/') and $modules = str_replace('/','\\',$modules);
         //模块检测
-        is_dir($modulepath) or Assets::assert();
-        //控制器名称及存实性检测
-        class_exists($className = SR_APP_NAME.($modules?"\\{$modules}":'')."\\Controller\\{$ctrler}",true) or Assets::assert();
+        if(is_dir($modulepath)){
+            Assets::parse();
+        }
+        //控制器检测
+        class_exists($className = 'Application'.($modules?"\\{$modules}":'')."\\Controller\\{$ctrler}",true) or Assets::parse();
         //方法检测
-        method_exists($classInstance = new $className(),$action) or Assets::assert();
+        method_exists($classInstance = new $className(),$action) or Assets::parse();
         return Dispatcher::execute($classInstance,new \ReflectionMethod($classInstance, $action));
     }
 

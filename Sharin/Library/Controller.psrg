@@ -51,7 +51,7 @@ class Controller extends Component{
      */
     protected static function getContext($clsnm=null){
         null === $clsnm and $clsnm = static::class;//get_called_class()
-        if(preg_match('/^'.SR_APP_NAME.'(\\\.*)?\\\Controller\\\(.*)$/',$clsnm,$matches)){
+        if(preg_match('/^Application(\\\.*)?\\\Controller\\\(.*)$/',$clsnm,$matches)){
             $context = [];
             $context['m'] = ltrim(str_replace('\\','/',$matches[1]),'/');
             $context['c'] = $matches[2];

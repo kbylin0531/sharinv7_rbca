@@ -29,20 +29,16 @@ define('SR_NOW',        $_SERVER['REQUEST_TIME']);
 define('SR_IS_AJAX',    ((isset($_SERVER['HTTP_X_REQUESTED_WITH']) and strtoupper($_SERVER['HTTP_X_REQUESTED_WITH']) == 'XMLHTTPREQUEST') ));
 define('SR_REQUEST_METHOD',strtoupper($_SERVER['REQUEST_METHOD']));//“GET”, “HEAD”，“POST”，“PUT” ...
 define('SR_IS_HTTPS',   isset ($_SERVER ['HTTPS']) and $_SERVER ['HTTPS'] === 'on');
-//应用名称和目录
-defined('SR_APP_NAME')  or define('SR_APP_NAME','Web');
-defined('SR_PATH_APP')  or define('SR_PATH_APP',SR_PATH_BASE.'/'.SR_APP_NAME);
 //请求方法
 const SR_IS_POST = SR_REQUEST_METHOD === 'POST';
 const SR_HTTP_PREFIX = SR_IS_HTTPS ? 'https://' : 'http://' ;
-define('SCRIPT_DIR',dirname($_SERVER['SCRIPT_NAME']));
-define('REQUESR_FILE',$_SERVER['REQUEST_URI']);
+define('SR_SCRIPT_DIR',dirname($_SERVER['SCRIPT_NAME']));
 //公共URL
 define('SR_PUBLIC_URL',SR_HTTP_PREFIX.$_SERVER['SERVER_NAME'].
         (
             (80 == $_SERVER['SERVER_PORT'])?
                 dirname($_SERVER['SCRIPT_NAME']) :
-                ":{$_SERVER['SERVER_PORT']}".SCRIPT_DIR
+                ":{$_SERVER['SERVER_PORT']}".SR_SCRIPT_DIR
         )
     );
 
