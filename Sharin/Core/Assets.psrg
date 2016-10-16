@@ -29,22 +29,22 @@ class Assets extends Component {
 
     protected static $rules = [];
 
-    protected static function handleRule(string $assets) : string
+    protected static function handleRule(string $assets,array $context=null) : string
     {
-        if(isset(self::$rules[$assets])){
-            $rule = self::$rules[$assets];
-            switch (gettype($rule)) {
-                case TYPE_STR:
-                case TYPE_ARRAY:
-                    if(is_callable($rule)){
-                        return $rule($assets);
-                    }
-
-                    break;
-
-            }
-        }
-        return $assets;
+//        if(isset(self::$rules[$assets])){
+//            $rule = self::$rules[$assets];
+//            switch (gettype($rule)) {
+//                case TYPE_STR:
+//                case TYPE_ARRAY:
+//                    if(is_callable($rule)){
+//                        return $rule($assets);
+//                    }
+//
+//                    break;
+//
+//            }
+//        }
+        return false;
     }
 
     /**
@@ -56,8 +56,9 @@ class Assets extends Component {
     {
         //获取访问的资源名称
         $asset = substr(trim($_SERVER['REQUEST_URI'],'/ '),strlen(trim(SR_SCRIPT_DIR,'/ ')));
-        if(($context = self::handleRule($context)) !== false){
-            \Sharin\dumpout($context,$asset);
+        if(($context = self::handleRule($asset,$context)) !== false){
+
+            die();
         }else{
             Response::sendHttpStatus(404,"Resource '$asset' Not Found");
             Developer::closeTrace();

@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-siteapp" />
     <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" />
     <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" />
-    <link rel="stylesheet" href="/Public/statics/font-awesome-4.4.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="__PUBLIC__/static/font-awesome-4.4.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="__PUBLIC_CSS__/base.css" />
 </head>
 <body>
@@ -82,7 +82,7 @@
 <!-- 聊天框结束 -->
 
 <!-- 引入bootstrjs部分开始 -->
-<script src="__PUBLIC__/statics/js/jquery-1.10.2.min.js"></script>
+<script src="__PUBLIC__/static/js/jquery-1.10.2.min.js"></script>
 <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script>
     var xbIsLogin=1,
@@ -100,19 +100,19 @@
         $('.bjy-fl-one').click();
     },2000)
 </script>
-<script src="__PUBLIC__/statics/emoji/js/config.js"></script>
-<script src="__PUBLIC__/statics/emoji/js/emoji-picker.js"></script>
-<script src="__PUBLIC__/statics/emoji/js/jquery.emojiarea.js"></script>
+<script src="__PUBLIC__/static/emoji/js/config.js"></script>
+<script src="__PUBLIC__/static/emoji/js/emoji-picker.js"></script>
+<script src="__PUBLIC__/static/emoji/js/jquery.emojiarea.js"></script>
 <script src="http://cdn.ronghub.com/RongIMLib-2.0.6.beta.min.js"></script>
-<script src="__PUBLIC__/statics/rongcloud/js/RongEmoji-2.0.2.beta.min.js"></script>
-<script src="__PUBLIC__/statics/rongcloud/js/main.js"></script>
+<script src="__PUBLIC__/static/rongcloud/js/RongEmoji-2.0.2.beta.min.js"></script>
+<script src="__PUBLIC__/static/rongcloud/js/main.js"></script>
 <script src="__PUBLIC_JS__/base.js"></script>
 <script>
 $(function(){
     // 初始化emoji
     window.emojiPicker = new EmojiPicker({
         emojiable_selector: '[data-emojiable=true]',
-        assetsPath: '__PUBLIC__/Public/statics/emoji/images',
+        assetsPath: '__PUBLIC__/Public/static/emoji/images',
         'iconSize': 20
     });
     window.emojiPicker.discover();

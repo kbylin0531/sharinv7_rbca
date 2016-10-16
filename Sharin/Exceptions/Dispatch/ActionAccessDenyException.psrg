@@ -10,7 +10,7 @@
 namespace Sharin\Exceptions\Dispatch;
 
 
-use Sharin\Exception;
+use Sharin\Exception as Exception;
 
 /**
  * Class ActionAccessDenyException

@@ -30,7 +30,14 @@ class My extends TagLib {
         'vue'=>array('attr'=>'','close'=>0)
         );
 
+    private $public_url = '';
+
+
     public function __construct(){
+
+
+        $this->public_url = SR_PUBLIC_URL;
+
 
     }
 
@@ -39,8 +46,8 @@ class My extends TagLib {
      */
     public function _layer(){
         $str=<<<php
-<script src="__PUBLIC__/statics/layer/layer.js"></script>
-<script src="__PUBLIC__/statics/layer/extend/layer.ext.js"></script>        
+<script src="{$this->public_url}/static/layer/layer.js"></script>
+<script src="{$this->public_url}/static/layer/extend/layer.ext.js"></script>        
 php;
         return $str;
     }
@@ -50,7 +57,7 @@ php;
      */
     public function _jquery(){
         $str=<<<php
-<script src="__PUBLIC__/statics/js/jquery-1.10.2.min.js"></script>    
+<script src="{$this->public_url}/static/js/jquery-1.10.2.min.js"></script>    
 php;
         return $str;
     }
@@ -60,8 +67,8 @@ php;
      */
     public function _vue(){
         $str=<<<php
-<script src="__PUBLIC__/statics/vue/vue.js"></script>    
-<script src="__PUBLIC__/statics/vue/vue-resource.min.js"></script> 
+<script src="{$this->public_url}/static/vue/vue.js"></script>    
+<script src="{$this->public_url}/static/vue/vue-resource.min.js"></script> 
 <script>
     Vue.http.options.emulateJSON = true;
 </script>    
@@ -78,7 +85,7 @@ php;
         $theme=isset($tag['theme']) ? $tag['theme'] : 'molv';
         $config='laydate({elem: ".xb-date",event: "click",format: "YYYY/MM/DD hh:mm:ss",istime: false,isclear: true,istoday: true,issure: true,festival: true,min: "2015-03-01 00:00:00",max: "2015-04-01 23:59:59",start: laydate.now(),fixed: false,zIndex: 99999999})';
         $link=<<<php
-<script src="__PUBLIC__/statics/laydate-v1.1/laydate.js"></script>
+<script src="{$this->public_url}/static/laydate-v1.1/laydate.js"></script>
 <script>
     $('body').attr('id', 'xb-date');
     laydate.skin("$theme");
@@ -103,7 +110,7 @@ php;
 
     //引入animate
     public function _animate(){
-        return '<link rel="stylesheet" href="__PUBLIC__/statics/css/animate.css">';
+        return "<link rel=\"stylesheet\" href=\"{$this->public_url}/static/css/animate.css\">";
     }
 
     /**
@@ -111,7 +118,7 @@ php;
     */
     public function _icheckcss(){
         $link=<<<php
-    <link rel="stylesheet" href="__PUBLIC__/statics/iCheck-1.0.2/skins/all.css">
+    <link rel="stylesheet" href="{$this->public_url}/static/iCheck-1.0.2/skins/all.css">
 php;
         return $link;
     }
@@ -124,7 +131,7 @@ php;
     public function _icheckjs($tag){
         $color=isset($tag['color']) ? $tag['color'] : 'green';
         $link=<<<php
-<script src="__PUBLIC__/statics/iCheck-1.0.2/icheck.min.js"></script>
+<script src="{$this->public_url}/static/iCheck-1.0.2/icheck.min.js"></script>
 <script>
 $(document).ready(function(){
     $('.xb-icheck').iCheck({
@@ -143,9 +150,9 @@ php;
         $link=<<<php
     <meta http-equiv="Cache-Control" content="no-transform" />
     <meta http-equiv="Cache-Control" content="no-siteapp" />
-    <link rel="stylesheet" href="__PUBLIC__/statics/bootstrap-3.3.5/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="__PUBLIC__/statics/bootstrap-3.3.5/css/bootstrap-theme.min.css" />
-    <link rel="stylesheet" href="__PUBLIC__/statics/font-awesome-4.4.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="{$this->public_url}/static/bootstrap-3.3.5/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="{$this->public_url}/static/bootstrap-3.3.5/css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" href="{$this->public_url}/static/font-awesome-4.4.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="__PUBLIC_CSS__/base.css" />
 php;
     return $link;
@@ -155,8 +162,8 @@ php;
     public function _bootstrapjs($tag,$content) {
         $link=<<<php
 <!-- 引入bootstrjs部分开始 -->
-<script src="__PUBLIC__/statics/js/jquery-1.10.2.min.js"></script>
-<script src="__PUBLIC__/statics/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="{$this->public_url}/static/js/jquery-1.10.2.min.js"></script>
+<script src="{$this->public_url}/static/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="__PUBLIC_JS__/base.js"></script>
 php;
     return $link;
@@ -165,7 +172,7 @@ php;
     // bootstrapcss标签
     public function _suicss($tag,$content) {
         $link=<<<php
-<link rel="stylesheet" href="__PUBLIC__/statics/sui-0.6.1/css/sm.min.css">
+<link rel="stylesheet" href="{$this->public_url}/static/sui-0.6.1/css/sm.min.css">
 php;
     return $link;
     }
@@ -173,8 +180,8 @@ php;
     // bootstrapjs标签
     public function _suijs($tag,$content) {
         $link=<<<php
-<script src="__PUBLIC__/statics/js/zepto-1.1.6.min.js"></script>
-<script src="__PUBLIC__/statics/sui-0.6.1/js/sm.min.js"></script>
+<script src="{$this->public_url}/static/js/zepto-1.1.6.min.js"></script>
+<script src="{$this->public_url}/static/sui-0.6.1/js/sm.min.js"></script>
 <script>
     $.init();
 </script>
@@ -188,8 +195,8 @@ php;
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="stylesheet" href="__PUBLIC__/statics/Framework7-1.2.0/css/framework7.ios.min.css" />
-    <link rel="stylesheet" href="__PUBLIC__/statics/Framework7-1.2.0/css/framework7.ios.colors.min.css" />
+    <link rel="stylesheet" href="{$this->public_url}/static/Framework7-1.2.0/css/framework7.ios.min.css" />
+    <link rel="stylesheet" href="{$this->public_url}/static/Framework7-1.2.0/css/framework7.ios.colors.min.css" />
 php;
     return $link;
     }
@@ -197,7 +204,7 @@ php;
     // framework7js标签
     public function _framework7js($tag,$content) {
         $link=<<<php
-    <script src="__PUBLIC__/statics/Framework7-1.2.0/js/framework7.min.js"></script>
+    <script src="{$this->public_url}/static/Framework7-1.2.0/js/framework7.min.js"></script>
 php;
     return $link;
     }
@@ -207,7 +214,7 @@ php;
         $link=<<<php
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
         <meta name="format-detection" content="telephone=no">
-    <link rel="stylesheet" href="__PUBLIC__/statics/frozenui-1.3.0/css/frozen.css" />
+    <link rel="stylesheet" href="{$this->public_url}/static/frozenui-1.3.0/css/frozen.css" />
     <link rel="stylesheet" href="__PUBLIC_CSS__/base.css" />
 php;
     return $link;
@@ -216,8 +223,8 @@ php;
     // frozenuijs标签
     public function _frozenuijs($tag,$content) {
         $link=<<<php
-<script src="__PUBLIC__/statics/frozenui-1.3.0/lib/zepto.min.js"></script>
-<script src="__PUBLIC__/statics/frozenui-1.3.0/js/frozen.js"></script>
+<script src="{$this->public_url}/static/frozenui-1.3.0/lib/zepto.min.js"></script>
+<script src="{$this->public_url}/static/frozenui-1.3.0/js/frozen.js"></script>
 <script src="__PUBLIC_JS__/base.js"></script>
 php;
     return $link;
@@ -228,7 +235,7 @@ php;
     */
    public function _umeditorcss(){
         $link=<<<php
-<link rel="stylesheet" href="/Public/statics/umeditor1_2_2/themes/default/css/umeditor.css">
+<link rel="stylesheet" href="/Public/static/umeditor1_2_2/themes/default/css/umeditor.css">
 php;
         return $link;
    }
@@ -237,9 +244,9 @@ php;
     */
    public function _umeditorjs(){
         $link=<<<php
-<script src="/Public/statics/umeditor1_2_2/umeditor.config.js"></script>
-<script src="/Public/statics/umeditor1_2_2/umeditor.js"></script>
-<script src="/Public/statics/umeditor1_2_2/lang/zh-cn/zh-cn.js"></script>
+<script src="/Public/static/umeditor1_2_2/umeditor.config.js"></script>
+<script src="/Public/static/umeditor1_2_2/umeditor.js"></script>
+<script src="/Public/static/umeditor1_2_2/lang/zh-cn/zh-cn.js"></script>
 php;
         return $link;
    }
@@ -278,8 +285,8 @@ php;
 <script id="container" name="$name" type="text/plain">
     $content
 </script>
-<script src="/Public/statics/ueditor1_4_3/ueditor.config.js"></script>
-<script src="/Public/statics/ueditor1_4_3/ueditor.all.js"></script>
+<script src="/Public/static/ueditor1_4_3/ueditor.config.js"></script>
+<script src="/Public/static/ueditor1_4_3/ueditor.all.js"></script>
 <script>
     var um = UE.getEditor('container',{
         initialFrameHeight:$height,
@@ -307,8 +314,8 @@ php;
     // webuploader的css部分和jquery因为插件需要引在jquery后边；所以在头部引入了jquery
     public function _webuploadercss(){
         $str=<<<php
-<link rel="stylesheet" href="__PUBLIC__/statics/webuploader-0.1.5/xb-webuploader.css">
-<script src="__PUBLIC__/statics/js/jquery-1.10.2.min.js"></script>
+<link rel="stylesheet" href="{$this->public_url}/static/webuploader-0.1.5/xb-webuploader.css">
+<script src="{$this->public_url}/static/js/jquery-1.10.2.min.js"></script>
 php;
         return $str;
     }
@@ -317,7 +324,7 @@ php;
     public function _webuploaderjs(){
         $str=<<<php
 <script>
-    var BASE_URL = '__PUBLIC__/statics/webuploader-0.1.5';
+    var BASE_URL = '{$this->public_url}/static/webuploader-0.1.5';
 </script>
 <script src="//cdn.staticfile.org/webuploader/0.1.5/webuploader.min.js"></script>
 php;

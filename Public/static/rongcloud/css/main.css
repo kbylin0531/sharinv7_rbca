@@ -59,7 +59,7 @@
   width: 220px;
   height: 525px;
   float: left;
-  background: url(/Public/statics/rongcloud/images/bg_left.min.png);
+  background: url(static/rongcloud/images/bg_left.min.png);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -183,7 +183,7 @@
 #bjy-chat-modal .modal-dialog .modal-content .bjy-chat .bjy-chat-box .bjy-cb-history .bjy-cbhla-left .bjy-cbhl-avatar .bjy-cbhla-triangle {
   left: 44px;
   top: 10px;
-  background: url('/Public/statics/rongcloud/images/triangle-left-bjy.png') no-repeat;
+  background: url('static/rongcloud/images/triangle-left-bjy.png') no-repeat;
 }
 #bjy-chat-modal .modal-dialog .modal-content .bjy-chat .bjy-chat-box .bjy-cb-history .bjy-cbhla-left .bjy-cbhl-content {
   background: #e6ecff;
@@ -199,7 +199,7 @@
 #bjy-chat-modal .modal-dialog .modal-content .bjy-chat .bjy-chat-box .bjy-cb-history .bjy-cbhla-right .bjy-cbhl-avatar .bjy-cbhla-triangle {
   right: 50px;
   top: 10px;
-  background: url('/Public/statics/rongcloud/images/triangle-right-bjy.png') no-repeat;
+  background: url('static/rongcloud/images/triangle-right-bjy.png') no-repeat;
 }
 #bjy-chat-modal .modal-dialog .modal-content .bjy-chat .bjy-chat-box .bjy-cb-history .bjy-cbhla-right .bjy-cbhl-content {
   background: #d7efff;

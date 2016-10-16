@@ -30,7 +30,7 @@ return array(
 //        '__APP_IMAGES__'     => OSS_URL.trim(TMPL_PATH,'.').'App/Public/images',
 
         '__OSS__'            => OSS_URL,
-        '__PUBLIC__'         => SR_PUBLIC_URL.'/Public',
+        '__PUBLIC__'         => SR_PUBLIC_URL,
         '__HOME_CSS__'       => SR_PUBLIC_URL.'/app/admin/home/css',
         '__HOME_JS__'        => SR_PUBLIC_URL.'/app/admin/home/js',
         '__HOME_IMAGES__'    => SR_PUBLIC_URL.'/app/admin/home/images',
