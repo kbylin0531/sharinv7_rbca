@@ -11,8 +11,26 @@ use Sharin\Library\Controller;
 
 class Demo extends Controller {
 
-    public function elementCard(){
+
+    //UI
+    public function aa(){$this->display();}
+
+    //ELEMENT
+    public function element_card(){
         $this->display();
     }
+    public function elements_lists(){
+        $this->display();
+    }
+    public function elements_overlay(){
+        $this->display();
+    }
+    public function elements_ribbons(){
+        $this->display();
+    }
+    public function elements_rteps(){
+        $this->display();
+    }
+
 
 }
