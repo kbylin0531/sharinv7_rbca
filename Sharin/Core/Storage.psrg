@@ -191,10 +191,11 @@ class Storage extends Component {
         }
         if(!$limit or !$scopes) return true;//未限制或者限制区域为空
 
-
         //目录处理(路径处理，程序编码转化为系统编码) TODO:需要在windows中文版本(系统编码是GB2312)中测试编码转换问题
         $path = Encode::toSystemEncode($path);
         $temp = dirname($path);//修改的目录
+
+//        \Sharin\dumpout($temp,$scopes,Utils::checkInScope($temp,$scopes),self::$_config);
 
         if(is_string($scopes)){
             return Utils::checkInScope($temp,$scopes);
@@ -467,6 +468,7 @@ class Storage extends Component {
      * @return bool
      */
     public static function write($filepath,$content,$write_encode='UTF-8',$text_encode='UTF-8'){
+//        \Sharin\dumpout($filepath,self::$_config,self::checkAccessableWithRevise($filepath,false) );
         if(!self::checkAccessableWithRevise($filepath,false) or !self::makeParentDir($filepath)) return false;
         //文本编码检测
         $write_encode !== $text_encode and $content = iconv($text_encode,"{$write_encode}//IGNORE",$content);

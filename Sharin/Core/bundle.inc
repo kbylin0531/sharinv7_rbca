@@ -468,15 +468,15 @@ final class Configger {
             //预处理后的文件
             $litefile = SR_PATH_RUNTIME.'/configger.php';
 //            if(!Storage::has($litefile,Storage::READ_ACCESS) or Storage::mtime(SR_PATH_CONFIG) > Storage::mtime($litefile)){ //不能使用Storage的原因是避免Storage过早地出场
-            if(!is_file($litefile) or !is_readable($litefile) or filemtime(SR_PATH_CONFIG) > filemtime($litefile)) {
+            if(!is_file($litefile) or !is_readable($litefile) or (filemtime(SR_PATH_CONFIG) > filemtime($litefile))) {
                 //缓存文件不存在，或者已经过期（配置目录比缓存文件新旧表示过期）需要重新编译
                 if(!empty(self::$config['LITE_CLASS_LIST'])) foreach (self::$config['LITE_CLASS_LIST'] as $clsnm){
                     self::load($clsnm);
                 }
                 // Closure is not suggest in config file due to var_export could not do well with closure
                 // it will be translated to 'method Closure::__set_state()'
-                Storage::write($litefile,'<?php return '.var_export(self::$_cache,true).';') or Exception::throwing("配置无法写入文件'{$litefile}'");
-
+                self::store($litefile,self::$_cache);
+//                Storage::write($litefile,'<?php return '.var_export(self::$_cache,true).';') or Exception::throwing("配置无法写入文件'{$litefile}'");
 //                    dumpout('缓存文件不存在，或者已经过期（配置目录比缓存文件新旧表示过期），已经完成lite文件的建立工作', self::$_cache);
             }else{
                 //直接读取lite文件

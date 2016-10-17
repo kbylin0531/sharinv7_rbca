@@ -152,6 +152,11 @@ class Dispatcher extends Component {
     public static function dispatch($modules,$ctrler,$action){
         $modulepath = SR_PATH_APP."/{$modules}";//linux 不识别
         strpos($modules,'/') and $modules = str_replace('/','\\',$modules);
+        $context = [
+            'm' => $modules,
+            'c' => $ctrler,
+            'a' => $action,
+        ];
         //模块检测
         if(!is_dir($modulepath)){
             Assets::parse();
@@ -162,7 +167,8 @@ class Dispatcher extends Component {
             Assets::parse();
         }
         //方法检测
-        if(!method_exists($classInstance = new $className(),$action)){
+        $classInstance = new $className();
+        if(!method_exists($classInstance,$action)){
             Assets::parse();
         }
         return Dispatcher::execute($classInstance,new \ReflectionMethod($classInstance, $action));

@@ -777,13 +777,24 @@ class Think implements ViewInterface {
                 //现在解析规则改为 PATH_BASE.'Application'.'#相对于Application目录的位置#';
                 $templateName .= $this->config['TEMPLATE_SUFFIX'];
             }
-            if(strpos($templateName,'/') !== 0){
-                //Relative path
-                $templateName = realpath(dirname($this->template).'/'.$templateName);
-            }else{
+
+//            Sharin\dumpout(realpath(dirname($this->template).'/'.$templateName));
+//            Sharin\dump($templateName);
+//            $temp = $templateName;
+
+            if(strpos($templateName,'/') === 0){
                 //Absolute path
                 $templateName = SR_PATH_APP.$templateName;//abs
+            }elseif(strpos($templateName,'~/') === 0){
+                //View根目录
+                $templateName = dirname(dirname($this->template)).substr($templateName,1);
+//                Sharin\dumpout($templateName);
+            }else{
+                //Relative path
+                $templateName = dirname($this->template).'/'.$templateName;
             }
+            $templateName = realpath($templateName);
+
             if(is_file($templateName)){
                 // 获取模板文件内容
                 $parseStr .= file_get_contents($templateName);
