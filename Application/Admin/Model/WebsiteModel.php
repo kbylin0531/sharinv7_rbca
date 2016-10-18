@@ -1,21 +1,15 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: asus
- * Date: 16-10-18
- * Time: 下午1:10
+ * User: lnzhv
+ * Date: 7/26/16
+ * Time: 7:57 PM
  */
 
-namespace Application\System\Model;
-
-
+namespace Application\Admin\Model;
 use Sharin\Library\Model;
 
-/**
- * Class SiteModel 站点管理模型
- * @package Application\System\Model
- */
-class SiteModel extends Model {
+class WebsiteModel extends Model {
 
     protected $tablename = 'lx_website';
     protected $fields = [
@@ -24,6 +18,7 @@ class SiteModel extends Model {
         'title'         => null,
         'description'   => null,
     ];
+
 //---------------------------------------- for general query -------------------------------------------------------------------------------//
     /**
      * @param bool $name_as_key
@@ -75,6 +70,7 @@ class SiteModel extends Model {
         }
         return $list;
     }
+
     /**
      * @return array|false
      */
@@ -82,8 +78,12 @@ class SiteModel extends Model {
         $list = $this->table('lx_menu')->where('type = 2')->order('`order` desc')->select();
         return $list;
     }
+
 //---------------------------------------- for management -------------------------------------------------------------------------------//
+
     public function revise(){
+
     }
+
 
 }

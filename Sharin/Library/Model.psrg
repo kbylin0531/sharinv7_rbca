@@ -1,6 +1,9 @@
 <?php
 namespace Sharin\Library ;
+use Sharin\Core\Lang;
 use Sharin\Exception as Exception;
+use Sharin\Exceptions\PropertyInvalidException;
+use Sharin\Library\Helper\ClientAgent;
 use Sharin\Utils;
 
 /**
@@ -102,7 +105,7 @@ class Model {
      * @throws Exception
      */
     public function __construct(){
-        $this->dao = Dao::instance();
+        $this->dao = Dao::getInstance();
         $this->reset([
             'table'     => $this->tablename,
         ]);
@@ -141,7 +144,7 @@ class Model {
     /**
      * 重置CURD参数
      * @param array|null $originOption 初始化时使用的参数
-     * @return void
+     * @return $this
      * @throws Exception
      */
     protected function reset(array $originOption=null){
@@ -163,6 +166,7 @@ class Model {
         $this->_options = $origin;
         isset($this->_options['table']) or $this->_options['table'] = $this->tablename;
         $this->_inputs = [];
+        return $this;
     }
 
     /**
@@ -303,7 +307,6 @@ class Model {
 
             $inputs = $this->_inputs['fields'];
             $sql = "INSERT INTO {$tablename} ({$fields}) VALUES ({$holder});";
-//            \Sharin\dumpout($sql,$inputs);
             return $this->exec($sql,$inputs);
         }else{
             //给定了参数的情况下无需考虑链式调用设置的参数
@@ -337,7 +340,7 @@ class Model {
      * @return array|false
      */
     public function query($sql,array $inputs=null){
-        $result = $this->dao->query(Model::$_lastSql=$sql,Model::$_lastInputs = $inputs);
+        $result = $this->dao->query(Model::$_lastSql = $sql , Model::$_lastInputs = $inputs);
         $this->reset();
         return $result;
     }
@@ -393,7 +396,6 @@ class Model {
             empty($this->_options['table']) and Exception::throwing('Table should not be empty!',$this->_options);
             $tablename = $this->_options['table'];
             //设置更新字段
-//            \Sharin\dumpout($this->_options,$this->_inputs);
             empty($this->_options['fields']) and Exception::throwing('Fields should not be empty!',$this->_options);
             $fields = explode(',',$this->_options['fields'] );
             array_walk($fields,function (&$field){
@@ -416,10 +418,7 @@ class Model {
                 $inputs = array_merge($inputs,$this->_options['where']);
             }
 
-//            \Sharin\dumpout([$sql,$inputs]);
-
             $result = $this->exec($sql,$inputs);
-//            dumpout([$sql,$inputs],$result);
             return $result;
         }else{
             $inputs = [];
@@ -503,7 +502,6 @@ class Model {
             $inputs = isset($this->_inputs['fields'])?$this->_inputs['fields']:[];
             if(isset($this->_inputs['where'])) $inputs = array_merge($inputs,$this->_inputs['where']);
 
-//            \Sharin\dumpout($sql,$inputs,$this->query($sql,$inputs),$this->error);
             return $this->query($sql,$inputs);
         }
 
@@ -775,5 +773,182 @@ class Model {
         $data = Utils::merge($data,$info,false);
         Utils::filter($data,$comparer);
         return $data;
+    }
+
+//----------------------------------------------- 魔术方法获取和设置插入的属性（只提供设置的入口） ----------------------------------------------------------------//
+    /**
+     * @var array 要插入的数据属性及各个属性相关规则
+     */
+    protected $insert = [];
+    /**
+     *
+     * 认证因子格式（不同于thinkphp，认证的字段作为健而存在）
+     * [
+     *  RULE
+     *
+     * ]
+     * //array(field,rule,message,condition,type,when,params)
+     *
+     * @var array 要插入的数据属性
+     */
+    protected $_insert = [];
+
+    /**
+     * 获取属性
+     * @param string $name 属性名称
+     * @return mixed 获取的属性不存在时抛出异常
+     * @throws PropertyInvalidException
+     */
+    public function __get(string $name){
+        if(!isset($this->_insert[$name])){
+            throw new PropertyInvalidException($name);
+        }
+        return $this->_insert[$name];
+    }
+
+    const MUST_VALIDATE   = 1; // 必须验证
+    const EXISTS_VALIDATE = 0; // 表单存在字段则验证
+    const VALUE_VALIDATE  = 2; // 表单值不为空则验证
+
+    /**
+     * @param string $name 属性名称
+     * @param $value
+     * @throws PropertyInvalidException
+     */
+    public function __set(string $name, $value){
+        if(!key_exists($name,$this->insert)){
+            throw new PropertyInvalidException("Property '$name' not exist!");
+        }
+        if(isset($this->insert[$name])){
+            //如果是null表示可以无认证规则，可以添加任何值
+            $rule = $this->insert[$name];
+
+            // 判断是否需要执行验证
+            if (0 == strpos($rule[2], '{%') and strpos($rule[2], '}')) { // 支持提示信息的多语言 使用 {%语言定义} 方式
+                $rule[2] = Lang::get(substr($rule[2], 2, -1));
+            }
+
+            $rule[3] = isset($rule[3]) ? $rule[3] : self::EXISTS_VALIDATE;  //默认存在即验证
+            $rule[4] = isset($rule[4]) ? $rule[4] : 'regex';                // 默认正则表达式验证
+
+            if(false === $this->check($value, $rule)){
+                $this->error = $value[2];;
+//                throw new PropertyInvalidException(" $name 无法通过验证");
+            }
+        }
+        $this->insert[$name] = $value;
+    }
+
+    /**
+     * 根据验证因子验证字段
+     * @access protected
+     * @param array $data 创建数据
+     * @param array $val 验证因子
+     * @return boolean
+     */
+    protected function _validationFieldItem($data, $val)
+    {
+        switch (strtolower(trim($val[4]))) { // 验证类型
+            case 'function':// 使用函数进行验证
+            case 'callback':    // 调用方法进行验证
+                return call_user_func_array($val[1], isset($val[6]) ? (array) $val[6] : []);
+            case 'confirm':    // 验证两个字段是否相同
+                return $val == $data[$val[1]];
+            case 'unique':    // TODO:验证某个值是否唯一
+                return true;
+            default:    // 检查附加规则
+                return $this->check($val, $val[1], $val[4]);
+        }
+    }
+    /**
+     * 验证数据 支持 in between equal length regex expire ip_allow ip_deny
+     * @access public
+     * @param string $value 验证数据
+     * @param mixed $rule 验证表达式
+     * @param string $type 验证方式 默认为正则验证
+     * @return boolean
+     */
+    public function check($value, $rule, $type = 'regex')
+    {
+        $type or $type = $rule[3];
+        $type = strtolower(trim($type));
+        switch ($type) {
+            case 'function':
+            case 'callback':
+                return call_user_func($rule[1],$value);
+            case 'in':// 验证是否在某个指定范围之内 逗号分隔字符串或者数组
+            case 'notin':
+                $range = is_array($rule) ? $rule : explode(',', $rule);
+                return 'in' == $type ? in_array($value, $range) : !in_array($value, $range);
+            case 'between':// 验证是否在某个范围
+            case 'notbetween':    // 验证是否不在某个范围
+                if (is_array($rule)) {
+                    $min = $rule[0];
+                    $max = $rule[1];
+                } else {
+                    list($min, $max) = explode(',', $rule);
+                }
+                return 'between' == $type ? $value >= $min && $value <= $max : $value < $min || $value > $max;
+            case 'equal':// 验证是否等于某个值
+            case 'notequal':    // 验证是否等于某个值
+                return 'equal' == $type ? $value == $rule : $value != $rule;
+            case 'length':    // 验证长度
+                $length = mb_strlen($value, 'utf-8');     // 当前数据长度
+                if (strpos($rule, ',')) {
+                    // 长度区间
+                    list($min, $max) = explode(',', $rule);
+                    return $length >= $min && $length <= $max;
+                } else {
+                    // 指定长度
+                    return $length == $rule;
+                }
+            case 'expire':
+                list($start, $end) = explode(',', $rule);
+                if (!is_numeric($start)) {
+                    $start = strtotime($start);
+                }
+
+                if (!is_numeric($end)) {
+                    $end = strtotime($end);
+                }
+
+                return SR_NOW >= $start && SR_NOW <= $end;
+            case 'ip_allow':    // IP 操作许可验证
+                return in_array(ClientAgent::getClientIP(), explode(',', $rule));
+            case 'ip_deny':    // IP 操作禁止验证
+                return !in_array(ClientAgent::getClientIP(), explode(',', $rule));
+            case 'regex':
+            default:
+                // 默认使用正则验证 可以使用验证类中定义的验证名称
+                // 检查附加规则
+                return $this->regex($value, $rule);
+        }
+    }
+
+    /**
+     * 使用正则验证数据
+     * @access public
+     * @param string $value  要验证的数据
+     * @param string $rule 验证规则
+     * @return boolean
+     */
+    public function regex($value, $rule)
+    {
+        $validate = array(
+            'require'  => '/\S+/',
+            'email'    => '/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/',
+            'url'      => '/^http(s?):\/\/(?:[A-za-z0-9-]+\.)+[A-za-z]{2,4}(:\d+)?(?:[\/\?#][\/=\?%\-&~`@[\]\':+!\.#\w]*)?$/',
+            'currency' => '/^\d+(\.\d+)?$/',
+            'number'   => '/^\d+$/',
+            'zip'      => '/^\d{6}$/',
+            'integer'  => '/^[-\+]?\d+$/',
+            'double'   => '/^[-\+]?\d+(\.\d+)?$/',
+            'english'  => '/^[A-Za-z]+$/',
+        );
+        // 检查是否有内置的正则表达式
+        if (isset($validate[strtolower($rule)])) {
+            $rule = $validate[strtolower($rule)];
+        }
+        return preg_match($rule, $value) === 1;
     }
 }

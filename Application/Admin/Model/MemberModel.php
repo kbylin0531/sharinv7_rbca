@@ -7,16 +7,40 @@
  * Time: 5:49 PM
  */
 namespace Application\Admin\Model;
-use PLite\Library\Model;
-use PLite\Library\Cookie;
-use PLite\Library\Logger;
-use PLite\Library\Session;
-use PLite\Util\Encrypt\Base64;
-use PLite\Util\Helper\ClientAgent;
+use Sharin\Core\Logger;
+use Sharin\Library\Helper\Base64;
+use Sharin\Library\Helper\ClientAgent;
+use Sharin\Library\Model;
+use Sharin\Library\Cookie;
+use Sharin\Library\Session;
 
+/**
+ * Class MemberModel 用户模型
+ *
+ * @property string $username
+ * @property int $sex
+ * @property string $nickname
+ * @property string $email
+ * @property int $status
+ * @property string $passwd
+ * @property string $profile 头像的路径
+ *
+ * @package Application\Admin\Model
+ */
 class MemberModel extends Model {
 
     protected $tablename = 'lx_member';
+
+    protected $insert = [
+        'username'  => null,
+        'sex'       => null,
+        'nickname'  => null,
+        'email'     => null,
+        'status'    => null,
+        'passwd'    => null,//初始密码
+        'profile'   => null,
+    ];
+
     protected $fields = [
         'username'  => null,
         'sex'       => null,
@@ -29,7 +53,6 @@ class MemberModel extends Model {
         'passwd'    => null,//初始密码
         'profile'   => null,
     ];
-
     const LOGIN_USERNAME = 0;
     const LOGIN_EMAIL = 1;
 
@@ -132,8 +155,8 @@ class MemberModel extends Model {
         }
         $userinfo = $this->fields('profile,email,id,nickname,last_login_ip,last_login_time,sex,username,passwd')->where($where)->find();
         if(false === $userinfo){
-            Logger::write($this->error(),$userinfo);
-            if(!DEBUG_MODE_ON){
+            Logger::record([$this->error(),$userinfo]);
+            if(!SR_DEBUG_MODE_ON){
                 $this->error = '服务端发生了错误！';
             }
         }elseif(!$userinfo){//空数组
@@ -143,7 +166,7 @@ class MemberModel extends Model {
                 //update
                 $this->fields([
                     'last_login_ip'     => ClientAgent::getClientIP(),
-                    'last_login_time'   => REQUEST_TIME,
+                    'last_login_time'   => SR_NOW,
                 ])->where($where)->update();
 
                 unset($userinfo['passwd']);
@@ -173,14 +196,14 @@ class MemberModel extends Model {
         $result = $this->where(['username'=>$username])->find();
         return $result;
     }
+
+
     /**
      * 添加用户
-     * @param array $info
      * @return bool
      */
-    public function add(array $info){
-        $info = $this->data($info);
-        if(empty($info['nickname'])) $info['nickname'] = '匿名用户_'.str_replace('.','',''.microtime(true));
+    public function add(){
+        $info = $this->insert;
         return $this->fields($info)->create();
     }
 
@@ -208,6 +231,5 @@ class MemberModel extends Model {
         $info = $this->data($info);
         return $this->fields($info)->where('id = '.intval($id))->update();
     }
-
 
 }

@@ -1,0 +1,17 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: asus
+ * Date: 16-10-18
+ * Time: 下午2:17
+ */
+
+namespace Sharin\Library;
+
+/**
+ * Class SQLite SQLite访问
+ * @package Sharin\Library
+ */
+class SQLite extends \PDO {
+
+}

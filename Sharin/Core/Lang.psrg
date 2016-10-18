@@ -97,6 +97,11 @@ class Lang extends Component {
      */
     private static $cache = [];
 
+
+    public static function get($key){
+        return $key;
+    }
+
     /**
      * 获取语言包数组
      * @param string $type null时获取默认

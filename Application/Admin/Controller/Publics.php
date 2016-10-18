@@ -5,14 +5,18 @@
  * Date: 7/25/16
  * Time: 6:16 PM
  */
+
 namespace Application\Admin\Controller;
+use Application\Admin\Model\MemberModel;
 use Sharin\Core\Logger;
 use Sharin\Library\Controller;
 
 class Publics extends Controller{
+
     public function register(){
         $this->display();
     }
+
     public function login($username='',$passwd='',$remember=false){
         $error = '';
         if(SR_IS_POST){
@@ -35,12 +39,15 @@ class Publics extends Controller{
     public function lockScreen(){
         $this->display();
     }
+
     public function show404(){
         $this->display('404');
     }
+
     public function show500(){
         $this->display('500');
     }
+
     /**
      * 注销登录
      */
@@ -48,4 +55,5 @@ class Publics extends Controller{
         (new MemberModel())->logout();
         $this->redirect('/Admin/Publics/login');
     }
+
 }

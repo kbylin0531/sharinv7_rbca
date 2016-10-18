@@ -1,5 +1,5 @@
 <?php
-namespace Sharin\Core\Dao;
+namespace Sharin\Library\Dao;
 use PDO;
 use Sharin\Exceptions\Database\ConnectFailedException;
 use PDOException;
@@ -23,9 +23,10 @@ abstract class DaoAbstract extends PDO {
      * @throws ConnectFailedException
      */
     public function __construct(array $config){
-        $dsn = is_string($config['dsn'])?$config['dsn']:$this->buildDSN($config);
+        $dsn = empty($config['dsn']) ? $this->buildDSN($config) : $config['dsn'];
+        $option = empty($config['option']) ? null : $config['option'];
         try {
-            parent::__construct($dsn,$config['username'],$config['password'],$config['options']);
+            parent::__construct($dsn,$config['username'],$config['password'],$option);
         } catch(PDOException $e){
             throw new ConnectFailedException($dsn,$config,$e->getMessage());
         }

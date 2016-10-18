@@ -797,7 +797,7 @@ abstract class Component {
      * @param int|string|null $index 角标，如果是null时表示自动获取
      * @return object|false
      */
-    final public static function instance($index=null){
+    public static function instance($index=null){
         $static = static::class;
         isset(self::$_drivers[$static]) or self::$_drivers[$static] = [];
         if(!isset(self::$_drivers[$static][$index])){

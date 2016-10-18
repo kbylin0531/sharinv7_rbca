@@ -11,9 +11,9 @@ use PDO;
 use PDOException;
 use PDOStatement;
 use Sharin\Component;
-use Sharin\Core;
 use Sharin\Core\SEK;
 use Sharin\Exception as Exception;
+use Sharin\Library\Dao\DaoAbstract;
 
 /**
  * Class Dao
@@ -43,53 +43,11 @@ class Dao extends Component {
     public static function initializationize(array $config = null) {
         parent::initializationize([
             DRIVER_CLASS_LIST   => [
-                'Sharin\\Core\\Dao\\MySQL',
-                'Sharin\\Core\\Dao\\Oci',
-                'Sharin\\Core\\Dao\\SQLServer',
+                'Sharin\\Library\\Dao\\MySQL',
+                'Sharin\\Library\\Dao\\Oci',
+                'Sharin\\Library\\Dao\\SQLServer',
             ],
-            DRIVER_CONFIG_LIST  => [
-                [
-                    'dbname'    => 'sharin',//选择的数据库
-                    'username'  => 'lin',
-                    'password'  => '123456',
-                    'host'      => '127.0.0.1',
-                    'port'      => '3306',
-                    'charset'   => 'UTF8',
-                    'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
-                    'options'   => [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
-                    ],
-                ],
-                [
-                    'type'      => 'Oci',//数据库类型
-                    'dbname'    => 'xor',//选择的数据库
-                    'username'  => 'lin',
-                    'password'  => '123456',
-                    'host'      => '127.0.0.1',
-                    'port'      => '3306',
-                    'charset'   => 'UTF8',
-                    'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
-                    'options'   => [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
-                    ],
-                ],
-                [
-                    'type'      => 'Sqlsrv',//数据库类型
-                    'dbname'    => 'xor',//选择的数据库
-                    'username'  => 'lin',
-                    'password'  => '123456',
-                    'host'      => '127.0.0.1',
-                    'port'      => '3306',
-                    'charset'   => 'UTF8',
-                    'dsn'       => null,//默认先检查差DSN是否正确,直接写dsn而不设置其他的参数可以提高效率，也可以避免潜在的bug
-                    'options'   => [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,//默认异常模式
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,//结果集返回形式
-                    ],
-                ],
-            ],
+            DRIVER_CONFIG_LIST  => [],
             //禁止访问的PDO函数的名称
             'forbidden'  =>[
                 'forbid','getColumnMeta'
@@ -98,9 +56,17 @@ class Dao extends Component {
         self::$config = self::convention();
     }
 
+    public static function getInstance($index = null){
+        static $_instances = [];
+        if(!isset($_instances[$index])){
+            $_instances[$index] = new static();
+        }
+        return $_instances[$index];
+    }
+
     /**
      * 每一个Dao的驱动实现
-     * @var Core\Dao\DaoAbstract
+     * @var DaoAbstract
      */
     protected $pdo = null;
 
@@ -119,7 +85,7 @@ class Dao extends Component {
      * Dao constructor.
      * @param string|int $index
      */
-    public function __construct($index=null){
+    protected function __construct($index=null){
         $this->pdo = self::instance($index);
     }
 
@@ -132,12 +98,12 @@ class Dao extends Component {
      *                          如果输入参数为非空数组，则使用PDOStatement对象查询
      * @return array|false 返回array类型表述查询结果，返回false表示查询出错，可能是数据表不存在等数据库返回的错误信息
      */
-    public function query($sql,array $inputs=null){
+    public function query(string $sql,array $inputs=null){
         $this->error = null;
         try {
             if(empty($inputs)){
                 //直接使用PDO的查询功能
-                $statement = $this->pdo->query($sql);//返回PDOstatement,失败时返回false(或者抛出异常)，视错误的处理方式而定
+                $statement = $this->pdo->query($sql,PDO::FETCH_ASSOC);//返回PDOstatement,失败时返回false(或者抛出异常)，视错误的处理方式而定
 
                 if($statement){//query成功时返回PDOStatement对象
                     return $statement->fetchAll();//成功返回
