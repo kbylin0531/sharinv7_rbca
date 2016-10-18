@@ -445,7 +445,7 @@ final class Configger {
             'Sharin\\Core\\Cache',
         ],
         //运行时配置目录（其下的配置文件只在运行时由程序生成）
-        'RUNTIME_CONF_PATH'  => SR_PATH_DATA.'/Runtime/Configuration/',
+        'RUNTIME_CONF_PATH'  => SR_PATH_DATA.'/Configuration/',
     ];
 
     /**
