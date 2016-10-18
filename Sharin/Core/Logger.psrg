@@ -68,9 +68,9 @@ class Logger extends Component {
      * @param string $message 日志信息
      * @param string $level  日志级别
      * @param boolean $force  是否强制记录
-     * @return $this
+     * @return void
      */
-    public static function record($message, $level=self::LEVEL_INFO, $force=false) {
+    public static function record(string $message,string $level=self::LEVEL_INFO,bool $force=false) : void {
         static $allowlevel = null;
         null === $allowlevel and $allowlevel = self::convention('LEVEL',true);
         if($force or $allowlevel or false !== strpos($allowlevel,$level)){
