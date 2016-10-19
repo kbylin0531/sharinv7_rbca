@@ -777,23 +777,47 @@ class Model {
     }
 
 //----------------------------------------------- 魔术方法获取和设置插入的属性（只提供设置的入口） ----------------------------------------------------------------//
+
     /**
-     * @var array 要插入的数据属性及各个属性相关规则列表
+     * rule type 规则类型
      */
-    protected $insert = [];
+    const RT_REGEX = 1;
+//    const RT_FUNCTION = 2;
+    const RT_CALLBACK = 3;
+    const RT_IN = 4;
+    const RT_NOTIN = 5;
+    const RT_IN_STRICT = 104;
+    const RT_NOTIN_STRICT = 105;
+    const RT_BETWEEN = 6;
+    const RT_NOTBETWEEN = 7;
+    const RT_NOTEQUAL = 8;
+    const RT_EQUAL = 9;
+    const RT_NOTEQUAL_STRICT = 108;
+    const RT_EQUAL_STRICT = 109;
+    const RT_LENGTH = 10;
+    const RT_EXPIRE = 11;
+    const RT_IP_ALLOW = 12;
+    const RT_IP_DENY = 13;
+
+    const MUST_VALIDATE   = 1; // 必须验证
+    const EXISTS_VALIDATE = 0; // 表单存在字段则验证
+    const VALUE_VALIDATE  = 2; // 表单值不为空则验证
     /**
-     *
      * 认证因子格式（不同于thinkphp，认证的字段作为健而存在）
      * [
-     *  验证规则,
-     *  错误提示,
-     *  [验证条件,附加规则,]
+     *  '规则类型',// 见类常量 Model::RT_*
+     *  '规则内容',// 不同类型的规则对内容的解析不一样
+     *  '错误提示',// 支持多语言
      * ]
-     * array(验证字段1,验证规则,错误提示,[验证条件,附加规则,验证时间]),
      *
+     * @var array 要插入的数据属性及各个属性相关规则列表
+     */
+    protected $rule_insert = [];
+
+    /**
      * @var array 要插入的数据属性列表
      */
-    protected $_insert = [];
+    protected $data_insert = [];
 
     /**
      * 获取属性
@@ -802,15 +826,11 @@ class Model {
      * @throws PropertyInvalidException
      */
     public function __get(string $name){
-        if(!isset($this->_insert[$name])){
+        if(!isset($this->data_insert[$name])){
             throw new PropertyInvalidException($name);
         }
-        return $this->_insert[$name];
+        return $this->data_insert[$name];
     }
-
-    const MUST_VALIDATE   = 1; // 必须验证
-    const EXISTS_VALIDATE = 0; // 表单存在字段则验证
-    const VALUE_VALIDATE  = 2; // 表单值不为空则验证
 
     /**
      * @param string $name 属性名称
@@ -818,44 +838,73 @@ class Model {
      * @throws PropertyInvalidException 设置不存在的属性或者插入的属性不合法时会抛出该异常，建议在设置属性的时候使用try-catch包围
      */
     public function __set(string $name, $value){
-        if(!key_exists($name,$this->insert)){
+        if(!key_exists($name,$this->rule_insert)){
             throw new PropertyInvalidException("Property '$name' not exist!");
         }
 
-        $this->_insert[$name] = $value;
+        $this->data_insert[$name] = $value;
     }
 
 
     /**
      * 添加用户
-     * @return bool
+     * @return int 返回插入的记录的ID
+     * @throws Exception
+     * @throws PropertyEmptyException
      * @throws PropertyInvalidException
      */
     public function add(){
-        foreach ($this->insert as $field => $rule) {
-
-            if(isset($this->_insert[$field])){
-                //如果是null表示可以无认证规则，可以添加任何值
-                $rule = $this->insert[$name];
-
-                //错误默认属性
-                $rule[2] = isset($rule[3]) ? $rule[2] : self::EXISTS_VALIDATE;  //默认存在即验证
-                $rule[3] = isset($rule[3]) ? $rule[3] : 'regex';                // 默认正则表达式验证
-
-                if(false === $this->_validateItem($value, $rule)){
-                    //验证通过时并抛出异常(带错误信息)
-                    $error = (0 == strpos($rule[1], '{%') and strpos($rule[1], '}'))?
-                        Lang::get(substr($rule[1], 2, -1)) : $rule[1];;
-                    throw new PropertyInvalidException("Property '$name' not valid:{$error}!");
-                }
+        //遍历验证规则
+        foreach ($this->rule_insert as $field => $rules) {
+            //检查验证时间，默认存在即验证
+            //当验证规则的第一个参数不是数组时，即代表着验证条件，将它shift出数组
+            if(is_array($rules[0])){
+                $condition = self::MUST_VALIDATE;
             }else{
-                //插入的字段中缺少某一项,需要检测规则是否允许
-                $rule[2];
-                throw new PropertyEmptyException($field);
+                $condition = array_shift($rules);
+            }
+
+            $value = null; //待验证的值，只有在验证条件成立时才置为非null
+
+            switch ($condition) {
+                case self::MUST_VALIDATE:
+                    //要求非空但却为空的情况下抛出异常
+                    if(isset($this->data_insert[$field])){
+                        $value = $this->data_insert[$field];
+                    } else {
+                        throw new PropertyEmptyException("Field '{$field}' should not be empty!");
+                    }
+                    break;
+                case self::VALUE_VALIDATE:
+                    //有值时才会验证
+                    if(!empty($this->data_insert[$field])){
+                        $value = $this->data_insert[$field];
+                    }
+                    break;
+                case self::EXISTS_VALIDATE:
+                    //值存在时即验证
+                    if(isset($this->data_insert[$field])){
+                        $value = $this->data_insert[$field];
+                    }
+                    break;
+                default:
+                    throw new Exception($condition,'Undefined condition!');
+            }
+
+            //被设置说明需要验证
+            if(null !== $value){
+                foreach ($rules as $rule) {
+                    if(false === $this->_validateItem($value, $rule)){
+                        //验证通过时并抛出异常(带错误信息)
+                        $error = (0 == strpos($rule[1], '{%') and strpos($rule[1], '}'))?
+                                    Lang::get(substr($rule[1], 2, -1)) : $rule[1];;
+                        throw new PropertyInvalidException("Property '$field' not valid: $error !");
+                    }
+                }
             }
         }
-        $info = $this->_insert;
-        $this->_insert = [];
+        $info = $this->data_insert;
+        $this->data_insert = [];
         \Sharin\dumpout($info);
         return $this->fields($info)->create();
     }
@@ -866,40 +915,63 @@ class Model {
      * @access public
      * @param string $value 验证数据
      * @param array $rule 验证规则
-     * @return boolean
+     * @return boolean 是否验证通过
+     * @throws Exception 验证规则本身出错时抛出异常
      */
-    private function _validateItem(string $value,array $rule)
-    {
+    private function _validateItem(string $value,array $rule) {
         //正则表达式规则
         static $_regex = null;
 
+        $type = empty($rule[0]) ? self::RT_REGEX : intval($rule[1]);
+        $detail = $rule[1];
 
-        $type = empty($rule[3]) ? 'regex' : strtolower(trim($rule[3]));
-        $rule_detail = $rule[0];//详细规则
-
-        switch ( empty($rule[3]) ? 'regex' : strtolower(trim($rule[3])) ) {
-            case 'function':
-            case 'callback':
-                return call_user_func($rule[1],$value);
-            case 'in':// 验证是否在某个指定范围之内 逗号分隔字符串或者数组
-                $range = is_array($rule) ? $rule : explode(',', $rule);
-                return in_array($value, $range);
-            case 'notin':
-                $range = is_array($rule) ? $rule : explode(',', $rule);
-                return !in_array($value, $range);
-            case 'between':// 验证是否在某个范围
-            case 'notbetween':    // 验证是否不在某个范围
-                if (is_array($rule)) {
-                    $min = $rule[0];
-                    $max = $rule[1];
-                } else {
-                    list($min, $max) = explode(',', $rule);
+        switch ( $type ) {
+            case self::RT_CALLBACK:
+                if(is_callable($detail)){
+                    return call_user_func($detail,$value);
+                }else{
+                    throw new Exception($detail,'not a callable');
                 }
-                return 'between' == $type ? $value >= $min && $value <= $max : $value < $min || $value > $max;
-            case 'equal':// 验证是否等于某个值
-            case 'notequal':    // 验证是否等于某个值
-                return 'equal' == $type ? $value == $rule : $value != $rule;
-            case 'length':    // 验证长度
+            case self::RT_REGEX:
+                // 默认使用正则验证 可以使用验证类中定义的验证名称
+                $_regex or $_regex = [
+                    'notempty' => '/\S+/',
+                    'email'    => '/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/',
+                    'url'      => '/^http(s?):\/\/(?:[A-za-z0-9-]+\.)+[A-za-z]{2,4}(:\d+)?(?:[\/\?#][\/=\?%\-&~`@[\]\':+!\.#\w]*)?$/',
+                    'currency' => '/^\d+(\.\d+)?$/',
+                    'number'   => '/^\d+$/',
+                    'zip'      => '/^\d{6}$/',
+                    'integer'  => '/^[-\+]?\d+$/',
+                    'double'   => '/^[-\+]?\d+(\.\d+)?$/',
+                    'english'  => '/^[A-Za-z][A-Za-z\s]+$/',
+                ];
+                // 检查是否有内置的正则表达式
+                if (isset($_regex[$detail])) {
+                    $detail = $_regex[$detail];
+                }
+                return preg_match($detail, $value) === 1;
+            case self::RT_IN:// 验证是否在某个指定范围之内 逗号分隔字符串或者数组
+                return true === in_array($value, is_array($detail) ? $detail : explode(',', $detail) );
+            case self::RT_NOTIN:
+                return false === in_array($value, is_array($detail) ? $detail : explode(',', $detail) );
+            case self::RT_BETWEEN:// 验证是否在某个范围
+            case self::RT_NOTBETWEEN:    // 验证是否不在某个范围
+                if (is_array($detail)) {
+                    $min = $detail[0];
+                    $max = $detail[1];
+                } else {
+                    list($min, $max) = explode(',', $detail);
+                }
+                return $type === self::RT_BETWEEN ? ($value >= $min and $value <= $max) : ($value < $min or $value > $max);
+            case self::RT_EQUAL:// 验证是否等于某个值
+                return $value == $rule ;
+            case self::RT_NOTEQUAL:    // 验证是否等于某个值
+                return $value != $rule;
+            case self::RT_EQUAL_STRICT:// 验证是否等于某个值
+                return $value === $rule ;
+            case self::RT_NOTEQUAL_STRICT:    // 验证是否等于某个值
+                return $value !== $rule;
+            case self::RT_LENGTH:    // 验证长度
                 $length = mb_strlen($value, 'utf-8');     // 当前数据长度
                 if (strpos($rule, ',')) {
                     // 长度区间
@@ -909,7 +981,7 @@ class Model {
                     // 指定长度
                     return $length == $rule;
                 }
-            case 'expire':
+            case self::RT_EXPIRE:
                 list($start, $end) = explode(',', $rule);
                 if (!is_numeric($start)) {
                     $start = strtotime($start);
@@ -920,29 +992,13 @@ class Model {
                 }
 
                 return SR_NOW >= $start and SR_NOW <= $end;
-            case 'ip_allow':    // IP 操作许可验证
+            case self::RT_IP_ALLOW:    // IP 操作许可验证
                 return in_array(ClientAgent::getClientIP(), explode(',', $rule));
-            case 'ip_deny':    // IP 操作禁止验证
+            case self::RT_IP_DENY:    // IP 操作禁止验证
                 return !in_array(ClientAgent::getClientIP(), explode(',', $rule));
-            case 'regex':
             default:
-            // 默认使用正则验证 可以使用验证类中定义的验证名称
-                $_regex or $_regex = array(
-                    'require'  => '/\S+/',
-                    'email'    => '/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/',
-                    'url'      => '/^http(s?):\/\/(?:[A-za-z0-9-]+\.)+[A-za-z]{2,4}(:\d+)?(?:[\/\?#][\/=\?%\-&~`@[\]\':+!\.#\w]*)?$/',
-                    'currency' => '/^\d+(\.\d+)?$/',
-                    'number'   => '/^\d+$/',
-                    'zip'      => '/^\d{6}$/',
-                    'integer'  => '/^[-\+]?\d+$/',
-                    'double'   => '/^[-\+]?\d+(\.\d+)?$/',
-                    'english'  => '/^[A-Za-z][A-Za-z\s]+$/',
-                );
-                // 检查是否有内置的正则表达式
-                if (isset($_regex[strtolower($rule)])) {
-                    $rule = $_regex[strtolower($rule)];
-                }
-                return preg_match($rule, $value) === 1;
+                throw new Exception("Undefined rule '{}'");
         }
+        return true;
     }
 }
