@@ -32,7 +32,7 @@ class MemberModel extends Model {
     protected $tablename = 'lx_member';
 
     protected $insert = [
-        'username'  => null,
+        'username'  => [],
         'sex'       => null,
         'nickname'  => null,
         'email'     => null,
@@ -195,16 +195,6 @@ class MemberModel extends Model {
     public function findByName($username){
         $result = $this->where(['username'=>$username])->find();
         return $result;
-    }
-
-
-    /**
-     * 添加用户
-     * @return bool
-     */
-    public function add(){
-        $info = $this->insert;
-        return $this->fields($info)->create();
     }
 
     /**

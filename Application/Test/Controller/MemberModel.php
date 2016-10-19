@@ -9,6 +9,8 @@
 namespace Application\Test\Controller;
 
 
+use Sharin\Exceptions\PropertyInvalidException;
+
 class MemberModel {
 
     protected $model = null;
@@ -26,14 +28,20 @@ class MemberModel {
     }
 
     public function add(){
-        $this->model->email = '1797290103@qq.com';
-        $this->model->nickname = 'Baishou';
-        $this->model->passwd = md5(sha1('123456'));
-        $this->model->profile = '';
-        $this->model->sex = 1;
-        $this->model->status = 1;
+        try {
+            $this->model->email = '1797290103@qq.com';
+            $this->model->nickname = 'Baishou';
+            $this->model->passwd = md5(sha1('123456'));
+            $this->model->profile = '';
+            $this->model->sex = 1;
+            $this->model->status = 1;
+//            $this->model->aaa = '323232';//会抛出异常并被捕获
+        }catch (PropertyInvalidException $e) {
+            \Sharin\dumpout($e->getMessage());
+        }
 
         $result = $this->model->add();
+        \Sharin\dumpout($result,$this->model->error());
     }
 
 
