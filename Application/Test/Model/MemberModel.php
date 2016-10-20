@@ -21,7 +21,7 @@ use Sharin\Library\Session;
  */
 class MemberModel extends Model {
     protected $tablename = 'lx_member';
-    protected $rule_insert = [
+    protected $validate = [
         'username'  => [],
         'sex'       => null,
         'nickname'  => null,
